@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bcsdlab.biseo.repository.UserRepository">
-    <select id="findByEmail" resultType="String">
-        SELECT account_id FROM User WHERE account_id = #{account_id} AND is_deleted = 0;
+    <select id="findByAccountId" resultType="UserModel">
+        SELECT id, account_id, password, is_auth FROM User WHERE account_id = #{account_id} AND is_deleted = 0);
     </select>
 
     <select id="findById" resultType="UserModel">
