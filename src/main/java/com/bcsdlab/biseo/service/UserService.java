@@ -6,5 +6,5 @@ import java.util.Map;
 
 public interface UserService {
 
-    UserResponse signUp(UserRequest request);
+    Map<String, String> signUp(UserRequest request);
 }
