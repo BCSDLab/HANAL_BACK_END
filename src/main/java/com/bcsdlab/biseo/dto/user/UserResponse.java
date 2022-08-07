@@ -14,7 +14,7 @@ import lombok.Setter;
 public class UserResponse {
 
     private String name;
-    private String email;
+    private String account_id;
     private String student_id;
     private String department;
     private int grade;

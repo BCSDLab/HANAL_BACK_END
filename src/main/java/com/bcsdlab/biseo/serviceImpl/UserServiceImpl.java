@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> signUp(UserRequest request) {
-        if (userRepository.findByEmail(request.getEmail()) != null) {
+        if (userRepository.findByEmail(request.getAccount_id()) != null) {
             throw new RuntimeException("존재하는 계정입니다.");
         }
         UserModel user = UserMapper.INSTANCE.toUserModel(request);
@@ -46,9 +46,14 @@ public class UserServiceImpl implements UserService {
         // db 저장
         userRepository.signUp(user);
 
-        // 저장 후 유저 정보 토큰으로 리턴
+        // 저장 후 유저 정보 토큰으로 리
         Map<String, String> token = new HashMap<>();
         token.put("access", jwtUtil.generateToken(user.getId(), 0));
         return token;
+    }
+
+    @Override
+    public Map<String, String> login(UserRequest request) {
+        return null;
     }
 }
