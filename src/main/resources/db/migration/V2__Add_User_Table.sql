@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS User (
+    id          BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(255)    NOT NULL,
+    email       VARCHAR(255)    NOT NULL,
+    password    VARCHAR(255)    NOT NULL,
+    student_id  VARCHAR(255)    NOT NULL,
+    department  INT             NOT NULL,
+    user_type   VARCHAR(255)    NOT NULL,
+    created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    updated_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    is_auth     TINYINT         NOT NULL DEFAULT 0,
+    is_deleted  TINYINT         NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS User_Certified (
+    id          BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT          NOT NULL,
+    auth_num    VARCHAR(255)    NOT NULL,
+    auth_type   VARCHAR(255)    NOT NULL,
+    created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+);
