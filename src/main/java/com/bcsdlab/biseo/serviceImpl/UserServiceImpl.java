@@ -11,9 +11,13 @@ import com.bcsdlab.biseo.service.UserService;
 import com.bcsdlab.biseo.util.JwtUtil;
 import java.util.HashMap;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +67,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        HashMap<String, String> token = new HashMap<>();
+        Map<String, String> token = new HashMap<>();
         if (user.is_auth()) {
             token.put("access", jwtUtil.generateToken(user.getId(), 1));
             token.put("refresh", jwtUtil.generateToken(user.getId(), 2));
@@ -72,5 +76,19 @@ public class UserServiceImpl implements UserService {
         }
 
         return token;
+    }
+
+    @Override
+    public Map<String, String> refresh() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+
+        Map<String, Object> payloads = jwtUtil.getPayloads(token);
+        Long id = Long.parseLong(payloads.get("id").toString());
+
+        Map<String, String> newToken = new HashMap<>();
+        newToken.put("access", jwtUtil.generateToken(id, 1));
+        newToken.put("refresh", jwtUtil.generateToken(id, 2));
+        return newToken;
     }
 }

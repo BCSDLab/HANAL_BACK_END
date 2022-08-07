@@ -1,5 +1,6 @@
 package com.bcsdlab.biseo.controller;
 
+import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
 import com.bcsdlab.biseo.dto.user.UserRequest;
 import com.bcsdlab.biseo.dto.user.UserResponse;
@@ -29,5 +30,11 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody @Validated(ValidationGroups.Login.class) UserRequest request) {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
+    }
+
+    @PostMapping("/refresh")
+    @Auth(type = 2)
+    public ResponseEntity<Map<String, String>> refresh() {
+        return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 }

@@ -74,10 +74,17 @@ public class JwtUtil {
         }
 
         String jwt = token.substring(7);
+
+        Map<String, Object> payloads = getPayloads(jwt);
         int jwtType = -1;
+        Long id = -1L;
         try {
-            jwtType = Integer.parseInt(getPayloads(jwt).get("auth").toString());
+            jwtType = Integer.parseInt(payloads.get("auth").toString());
+            id = Long.parseLong(payloads.get("id").toString());
         } catch (NumberFormatException e) {
+            throw new RuntimeException("유효하지 않은 토큰입니다.");
+        }
+        if (id < 0 || jwtType < 0 || jwtType > 2) {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 
@@ -126,12 +133,14 @@ public class JwtUtil {
         }
         String payloads = new String(Base64.getDecoder().decode(tmp[1]));
         HashMap<String, Object> map = null;
+
         try {
             map = new ObjectMapper().readValue(payloads, HashMap.class);
-            if (map.get("id") == null || map.get("auth") == null) {
-                throw new RuntimeException("유효하지 않은 토큰입니다.");
-            }
         } catch (JsonProcessingException e) {
+            throw new RuntimeException("유효하지 않은 토큰입니다.");
+        }
+
+        if (map.get("id") == null || map.get("auth") == null) {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 
