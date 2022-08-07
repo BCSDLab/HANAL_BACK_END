@@ -9,4 +9,5 @@ public interface UserService {
     Map<String, String> signUp(UserRequest request);
     Map<String, String> login(UserRequest request);
     Map<String, String> refresh();
+    String sendAuthMail();
 }

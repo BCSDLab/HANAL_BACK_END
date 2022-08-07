@@ -18,5 +18,6 @@ CREATE TABLE IF NOT EXISTS User_Certified (
     auth_num    VARCHAR(255)    NOT NULL,
     auth_type   VARCHAR(255)    NOT NULL,
     created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    is_deleted  TINYINT         NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 );

@@ -37,4 +37,10 @@ public class UserController {
     public ResponseEntity<Map<String, String>> refresh() {
         return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
+
+    @PostMapping("/mail-auth")
+//    @Auth(type = 0)
+    public ResponseEntity<String> sendAuthMail() {
+        return new ResponseEntity<>(userService.sendAuthMail(), HttpStatus.OK);
+    }
 }

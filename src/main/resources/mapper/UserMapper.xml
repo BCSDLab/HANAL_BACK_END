@@ -16,5 +16,17 @@
         VALUES (#{name},#{account_id},#{password},#{student_id},#{department}, #{user_type})
     </insert>
 
+    <insert id="addAuthNum">
+        INSERT INTO User_Certified(user_id, auth_num, auth_type)
+        VALUES (#{user_id},#{auth_num},#{auth_type})
+    </insert>
+
+    <update id="deleteAuthNumById">
+        UPDATE User_Certified SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <select id="findRecentAuthNumByUserId" resultType="UserCertifiedModel">
+        SELECT * FROM User_Certified WHERE user_id = #{user_id} AND is_deleted = 0
+    </select>
 
 </mapper>

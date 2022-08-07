@@ -1,21 +1,25 @@
 package com.bcsdlab.biseo.serviceImpl;
 
+import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserRequest;
-import com.bcsdlab.biseo.dto.user.UserResponse;
+import com.bcsdlab.biseo.enums.AuthType;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.UserRepository;
 import com.bcsdlab.biseo.service.UserService;
 import com.bcsdlab.biseo.util.JwtUtil;
+import com.bcsdlab.biseo.util.MailUtil;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -25,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final MailUtil mailUtil;
 
     @Override
     public Map<String, String> signUp(UserRequest request) {
@@ -80,15 +85,62 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> refresh() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader("Authorization");
-
-        Map<String, Object> payloads = jwtUtil.getPayloads(token);
-        Long id = Long.parseLong(payloads.get("id").toString());
+        Long id = Long.parseLong(findUserInfoInToken().get("id").toString());
 
         Map<String, String> newToken = new HashMap<>();
         newToken.put("access", jwtUtil.generateToken(id, 1));
         newToken.put("refresh", jwtUtil.generateToken(id, 2));
         return newToken;
+    }
+
+    @Override
+    public String sendAuthMail() {
+        Map<String, Object> userInfo = findUserInfoInToken();
+        if (Integer.parseInt(userInfo.get("auth").toString()) != 0) {
+            throw new RuntimeException("토큰이 유효하지 않습니다.");
+        }
+        Long id = Long.parseLong(userInfo.get("id").toString());
+        UserModel user = userRepository.findById(id);
+        if (user == null) {
+            throw new RuntimeException("유저가 존재하지 않습니다.");
+        }
+
+        // 이전 발송 메일이랑 시간 차이 계산
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(id);
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        if (recentAuthNum != null && now.getTime() - recentAuthNum.getCreated_at().getTime() < 5 * 60 * 1000) {
+            throw new RuntimeException("메일 전송이 불가능합니다.");
+        }
+        if (recentAuthNum != null) {
+            userRepository.deleteAuthNumById(recentAuthNum.getId());
+        }
+        // 메일 발송
+        String authNum = makeRandomNumber();
+        mailUtil.sendMail(user, authNum);
+
+        // 인증번호 저장
+        UserCertifiedModel userCertifiedModel = new UserCertifiedModel();
+        userCertifiedModel.setUser_id(id);
+        userCertifiedModel.setAuth_num(authNum);
+        userCertifiedModel.setAuth_type(AuthType.SIGNUP);
+        userRepository.addAuthNum(userCertifiedModel);
+        return "인증번호가 발송되었습니다.";
+    }
+
+    private Map<String, Object> findUserInfoInToken() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+
+        return jwtUtil.getPayloads(token);
+    }
+
+    private String makeRandomNumber() {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            sb.append(random.nextInt(9));
+        }
+        return sb.toString();
+
     }
 }
