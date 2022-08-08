@@ -4,6 +4,7 @@ import com.bcsdlab.biseo.dto.user.AuthCode;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserRequest;
+import com.bcsdlab.biseo.dto.user.UserResponse;
 import com.bcsdlab.biseo.enums.AuthType;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.UserType;
@@ -36,14 +37,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> signUp(UserRequest request) {
-        if (userRepository.findByAccountId(request.getAccount_id()) != null) {
+        if (userRepository.findByAccountId(request.getAccountId()) != null) {
             throw new RuntimeException("존재하는 계정입니다.");
         }
         UserModel user = UserMapper.INSTANCE.toUserModel(request);
 
         // 기타 정보 처리
         user.setPassword(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
-        user.setUser_type(UserType.NONE);
+        user.setUserType(UserType.NONE);
 
         // 학과처리
         if (request.getGrade() < 1 || request.getGrade() > 4) {
@@ -66,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> login(UserRequest request) {
-        UserModel user = userRepository.findByAccountId(request.getAccount_id());
+        UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("존재하지 않는 아이디입니다.");
         }
@@ -76,7 +77,7 @@ public class UserServiceImpl implements UserService {
         }
 
         Map<String, String> token = new HashMap<>();
-        if (user.is_auth()) {
+        if (user.getIsAuth()) {
             token.put("access", jwtUtil.generateToken(user.getId(),1,  1));
             token.put("refresh", jwtUtil.generateToken(user.getId(),2,  2));
         } else {
@@ -159,6 +160,23 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteAuthNumById(recentAuthNum.getId());
         userRepository.setUserAuth(id);
         return "인증이 완료되었습니다.";
+    }
+
+    @Override
+    public UserResponse getMe() {
+        Map<String, Object> userInfo = findUserInfoInToken();
+        Long id = Long.parseLong(userInfo.get("id").toString());
+
+        UserModel me = userRepository.findById(id);
+        if (me == null) {
+            throw new RuntimeException("잘못된 정보입니다.");
+        }
+        UserResponse response = UserMapper.INSTANCE.toUserResponse(me);
+        response.setGrade(me.getDepartment() % 10);
+        response.setDepartment(Department.getDepartment(me.getDepartment() / 10 * 10));
+        System.out.println(Department.getDepartment(me.getDepartment() / 10 * 10));
+
+        return response;
     }
 
     private Map<String, Object> findUserInfoInToken() {

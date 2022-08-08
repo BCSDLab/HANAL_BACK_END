@@ -12,4 +12,5 @@ public interface UserService {
     Map<String, String> refresh();
     String sendAuthMail();
     String verifyAuthMail(AuthCode authCode);
+    UserResponse getMe();
 }

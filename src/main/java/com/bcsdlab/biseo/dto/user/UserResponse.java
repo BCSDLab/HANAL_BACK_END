@@ -14,9 +14,9 @@ import lombok.Setter;
 public class UserResponse {
 
     private String name;
-    private String account_id;
-    private String student_id;
+    private String accountId;
+    private String studentId;
     private String department;
-    private int grade;
-    private boolean is_auth;
+    private Integer grade;
+    private Boolean isAuth;
 }

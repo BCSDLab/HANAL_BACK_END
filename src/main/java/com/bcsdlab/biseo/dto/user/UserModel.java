@@ -17,13 +17,13 @@ public class UserModel {
 
     private Long id;
     private String name;
-    private String account_id;
+    private String accountId;
     private String password;
-    private String student_id;
-    private int department;
-    private UserType user_type;
-    private Timestamp created_at;
-    private Timestamp updated_at;
-    private boolean is_auth;
-    private boolean is_deleted;
+    private String studentId;
+    private Integer department;
+    private UserType userType;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private Boolean isAuth;
+    private Boolean isDeleted;
 }

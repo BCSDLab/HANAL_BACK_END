@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS User (
     user_type   VARCHAR(255)    NOT NULL,
     created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
-    is_auth     TINYINT         NOT NULL DEFAULT 0,
-    is_deleted  TINYINT         NOT NULL DEFAULT 0
+    is_auth     TINYINT(1)      NOT NULL DEFAULT 0,
+    is_deleted  TINYINT(1)      NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS User_Certified (
@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS User_Certified (
     auth_num    VARCHAR(255)    NOT NULL,
     auth_type   VARCHAR(255)    NOT NULL,
     created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-    is_deleted  TINYINT         NOT NULL DEFAULT 0,
+    is_deleted  TINYINT(1)      NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
 );

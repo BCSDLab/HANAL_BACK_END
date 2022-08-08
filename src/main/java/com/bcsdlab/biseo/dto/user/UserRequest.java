@@ -21,11 +21,11 @@ public class UserRequest {
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "이름이 비어있으면 안됩니다.")
     private String name;
     @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.Login.class}, message = "이메일은 비어있으면 안됩니다.")
-    private String account_id;
+    private String accountId;
     @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.Login.class}, message = "비밀번호가 비어있으면 안됩니다.")
     private String password;
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학번이 비어있으면 안됩니다.")
-    private String student_id;
+    private String studentId;
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학과가 비어있으면 안됩니다.")
     private String department;
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학년이 비어있으면 안됩니다.")
