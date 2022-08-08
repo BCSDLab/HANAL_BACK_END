@@ -13,4 +13,5 @@ public interface UserService {
     String sendAuthMail();
     String verifyAuthMail(AuthCode authCode);
     UserResponse getMe();
+    UserResponse updateDepartment(UserRequest request);
 }

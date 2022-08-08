@@ -113,14 +113,12 @@ public class JwtUtil {
                 } else {
                     throw new RuntimeException(("유효하지 않은 토큰입니다."));
                 }
-            } else if (type == 2){
+            } else {
                 if (auth == 2 && tokenType == 2) {
                     throw new RuntimeException("Refresh 토큰이 만료되었습니다.");
                 } else {
                     throw new RuntimeException(("유효하지 않은 토큰입니다."));
                 }
-            } else {
-                throw new RuntimeException("유효하지 않은 타입입니다.");
             }
         }
         return true;

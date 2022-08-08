@@ -32,4 +32,8 @@
     <update id="setUserAuth">
         UPDATE User SET is_auth = 1 WHERE id = #{id}
     </update>
+
+    <update id="updateDepartment">
+        UPDATE User SET department = #{department} WHERE id = #{id}
+    </update>
 </mapper>

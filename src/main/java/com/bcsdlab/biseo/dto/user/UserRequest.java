@@ -26,8 +26,8 @@ public class UserRequest {
     private String password;
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학번이 비어있으면 안됩니다.")
     private String studentId;
-    @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학과가 비어있으면 안됩니다.")
+    @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.ChangeDepartment.class}, message = "학과가 비어있으면 안됩니다.")
     private String department;
-    @NotNull(groups = {ValidationGroups.SignUp.class}, message = "학년이 비어있으면 안됩니다.")
+    @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.ChangeDepartment.class}, message = "학년이 비어있으면 안됩니다.")
     private Integer grade;
 }

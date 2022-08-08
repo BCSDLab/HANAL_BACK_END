@@ -167,6 +167,27 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> userInfo = findUserInfoInToken();
         Long id = Long.parseLong(userInfo.get("id").toString());
 
+        return getUserResponse(id);
+    }
+
+    @Override
+    public UserResponse updateDepartment(UserRequest request) {
+        Map<String, Object> userInfo = findUserInfoInToken();
+        Long id = Long.parseLong(userInfo.get("id").toString());
+        UserModel user = new UserModel();
+        user.setId(id);
+        try {
+            user.setDepartment(Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("존재하지 않는 학과입니다.");
+        }
+
+        userRepository.updateDepartment(user);
+
+        return getUserResponse(id);
+    }
+
+    private UserResponse getUserResponse(Long id) {
         UserModel me = userRepository.findById(id);
         if (me == null) {
             throw new RuntimeException("잘못된 정보입니다.");
@@ -174,8 +195,6 @@ public class UserServiceImpl implements UserService {
         UserResponse response = UserMapper.INSTANCE.toUserResponse(me);
         response.setGrade(me.getDepartment() % 10);
         response.setDepartment(Department.getDepartment(me.getDepartment() / 10 * 10));
-        System.out.println(Department.getDepartment(me.getDepartment() / 10 * 10));
-
         return response;
     }
 

@@ -56,4 +56,10 @@ public class UserController {
     public ResponseEntity<UserResponse> getMe() {
         return new ResponseEntity<>(userService.getMe(), HttpStatus.OK);
     }
+
+    @PostMapping("/me/department")
+    @Auth
+    public ResponseEntity<UserResponse> updateDepartment(@RequestBody @Validated(ValidationGroups.ChangeDepartment.class) UserRequest request) {
+        return new ResponseEntity<>(userService.updateDepartment(request), HttpStatus.OK);
+    }
 }
