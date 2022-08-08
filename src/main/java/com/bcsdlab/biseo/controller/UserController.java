@@ -33,13 +33,12 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    @Auth(type = 2)
     public ResponseEntity<Map<String, String>> refresh() {
         return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 
     @PostMapping("/mail-auth")
-//    @Auth(type = 0)
+    @Auth
     public ResponseEntity<String> sendAuthMail() {
         return new ResponseEntity<>(userService.sendAuthMail(), HttpStatus.OK);
     }

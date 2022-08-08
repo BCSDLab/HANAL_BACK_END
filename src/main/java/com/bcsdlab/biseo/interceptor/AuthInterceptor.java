@@ -33,6 +33,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             throw new RuntimeException("토큰이 존재하지 않습니다.");
         }
 
-        return jwtUtil.isValid(authorization, auth.type());
+        return jwtUtil.isValid(authorization, 1);
     }
 }

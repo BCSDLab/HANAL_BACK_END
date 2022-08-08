@@ -24,11 +24,10 @@ public class JwtUtil {
     @Value("${jwt.refresh}")
     private String refresh;
 
-    public String generateToken(Long id, Integer type) {
+    public String generateToken(Long id, Integer type, Integer isValid) {
         /**
-         * 0 : 인증 안됨
-         * 1 : 인증 된 access
-         * 2 : 인증 된 refresh
+         * 1 : access
+         * 2 : refresh
          */
         Map<String, Object> header = new HashMap<>();
         header.put("typ", "JWT");
@@ -36,7 +35,8 @@ public class JwtUtil {
 
         Map<String, Object> payloads = new HashMap<>();
         payloads.put("id", id);
-        payloads.put("auth", type);
+        payloads.put("type", type);
+        payloads.put("auth", isValid);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -44,7 +44,6 @@ public class JwtUtil {
 
         // TODO : 인증 시간 변경 필요
         switch (type) {
-            case 0:
             case 1:
                 key = access;
                 calendar.add(Calendar.MINUTE, 10);
@@ -64,7 +63,7 @@ public class JwtUtil {
             .compact();
     }
 
-    public boolean isValid(String token, int authType) {
+    public boolean isValid(String token, int type) {
         if (token == null) {
             throw new RuntimeException("토큰이 없습니다.");
         }
@@ -76,22 +75,24 @@ public class JwtUtil {
         String jwt = token.substring(7);
 
         Map<String, Object> payloads = getPayloads(jwt);
-        int jwtType = -1;
+        int auth = -1;
+        int tokenType = -1;
         Long id = -1L;
         try {
-            jwtType = Integer.parseInt(payloads.get("auth").toString());
+            auth = Integer.parseInt(payloads.get("auth").toString());
             id = Long.parseLong(payloads.get("id").toString());
+            tokenType = Integer.parseInt(payloads.get("type").toString());
         } catch (NumberFormatException e) {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
-        if (id < 0 || jwtType < 0 || jwtType > 2) {
+        if (id < 0 || auth < 0 || auth > 2 || tokenType < 1 || tokenType > 2) {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 
         String key = null;
-        if (authType == 0 || authType == 1) {
+        if (type == 1) {
             key = access;
-        } else if (authType == 2) {
+        } else if (type == 2) {
             key = refresh;
         } else {
             throw new RuntimeException("잘못된 인증 타입입니다.");
@@ -103,27 +104,25 @@ public class JwtUtil {
                 .parseClaimsJws(jwt)
                 .getBody();
         } catch (ExpiredJwtException expiredJwtException) {
-            if (authType == 0) {
-                if (jwtType == 0) {
+            if (type == 1) {
+                if (auth == 0 && tokenType == 1) {
                     throw new RuntimeException("인증 토큰이 만료되었습니다.");
-                } else {
-                    throw new RuntimeException("유효하지 않은 토큰입니다.");
-                }
-            } else {
-                if (authType == 1 && jwtType == 1) {
+                } else if (auth == 1 && tokenType == 1) {
                     throw new RuntimeException("Access 토큰이 만료되었습니다.");
-                } else if (authType == 2 && jwtType == 2) {
+                } else {
+                    throw new RuntimeException(("유효하지 않은 토큰입니다."));
+                }
+            } else if (type == 2){
+                if (auth == 2 && tokenType == 2) {
                     throw new RuntimeException("Refresh 토큰이 만료되었습니다.");
                 } else {
                     throw new RuntimeException(("유효하지 않은 토큰입니다."));
                 }
+            } else {
+                throw new RuntimeException("유효하지 않은 타입입니다.");
             }
         }
-        if (authType == jwtType) {
-            return true;
-        } else {
-            throw new RuntimeException("유효하지 않은 토큰입니다.");
-        }
+        return true;
     }
 
     public Map<String, Object> getPayloads(String token) {
@@ -140,7 +139,7 @@ public class JwtUtil {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 
-        if (map.get("id") == null || map.get("auth") == null) {
+        if (map.get("id") == null || map.get("auth") == null || map.get("type") == null) {
             throw new RuntimeException("유효하지 않은 토큰입니다.");
         }
 

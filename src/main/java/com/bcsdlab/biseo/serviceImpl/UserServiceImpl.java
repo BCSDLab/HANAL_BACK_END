@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
 
         // 저장 후 유저 정보 토큰으로 리턴
         Map<String, String> token = new HashMap<>();
-        token.put("auth", jwtUtil.generateToken(user.getId(), 0));
+        token.put("auth", jwtUtil.generateToken(user.getId(), 1, 0));
         return token;
     }
 
@@ -74,10 +74,10 @@ public class UserServiceImpl implements UserService {
 
         Map<String, String> token = new HashMap<>();
         if (user.is_auth()) {
-            token.put("access", jwtUtil.generateToken(user.getId(), 1));
-            token.put("refresh", jwtUtil.generateToken(user.getId(), 2));
+            token.put("access", jwtUtil.generateToken(user.getId(),1,  1));
+            token.put("refresh", jwtUtil.generateToken(user.getId(),2,  2));
         } else {
-            token.put("auth", jwtUtil.generateToken(user.getId(), 0));
+            token.put("auth", jwtUtil.generateToken(user.getId(),1, 0));
         }
 
         return token;
@@ -85,21 +85,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> refresh() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+        jwtUtil.isValid(token, 2);
         Long id = Long.parseLong(findUserInfoInToken().get("id").toString());
 
         Map<String, String> newToken = new HashMap<>();
-        newToken.put("access", jwtUtil.generateToken(id, 1));
-        newToken.put("refresh", jwtUtil.generateToken(id, 2));
+        newToken.put("access", jwtUtil.generateToken(id, 1,1));
+        newToken.put("refresh", jwtUtil.generateToken(id, 2, 2));
         return newToken;
     }
 
     @Override
     public String sendAuthMail() {
         Map<String, Object> userInfo = findUserInfoInToken();
-        if (Integer.parseInt(userInfo.get("auth").toString()) != 0) {
-            throw new RuntimeException("토큰이 유효하지 않습니다.");
-        }
         Long id = Long.parseLong(userInfo.get("id").toString());
+        int authType = Integer.parseInt(userInfo.get("auth").toString());
         UserModel user = userRepository.findById(id);
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
@@ -122,7 +123,11 @@ public class UserServiceImpl implements UserService {
         UserCertifiedModel userCertifiedModel = new UserCertifiedModel();
         userCertifiedModel.setUser_id(id);
         userCertifiedModel.setAuth_num(authNum);
-        userCertifiedModel.setAuth_type(AuthType.SIGNUP);
+        if (authType == 0) {
+            userCertifiedModel.setAuth_type(AuthType.SIGNUP);
+        } else if (authType == 1) {
+            userCertifiedModel.setAuth_type(AuthType.PASSWORD);
+        }
         userRepository.addAuthNum(userCertifiedModel);
         return "인증번호가 발송되었습니다.";
     }
