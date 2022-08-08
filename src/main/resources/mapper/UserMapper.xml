@@ -3,7 +3,7 @@
 <mapper namespace="com.bcsdlab.biseo.repository.UserRepository">
     <select id="findByAccountId" resultType="UserModel">
         SELECT id, account_id, password, is_auth FROM User
-        WHERE account_id = #{account_id} AND is_deleted = 0;
+        WHERE account_id = #{accountId} AND is_deleted = 0;
     </select>
 
     <select id="findById" resultType="UserModel">
@@ -13,12 +13,12 @@
 
     <insert id="signUp" parameterType="UserModel" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO User(name, account_id, password, student_id, department, user_type)
-        VALUES (#{name},#{account_id},#{password},#{student_id},#{department}, #{user_type})
+        VALUES (#{name},#{accountId},#{password},#{studentId},#{department}, #{userType})
     </insert>
 
     <insert id="addAuthNum">
-        INSERT INTO User_Certified(user_id, auth_num, auth_type)
-        VALUES (#{user_id},#{auth_num},#{auth_type})
+        INSERT INTO User_Certified(user_id, auth_num)
+        VALUES (#{userId},#{authNum})
     </insert>
 
     <update id="deleteAuthNumById">
@@ -26,7 +26,7 @@
     </update>
 
     <select id="findRecentAuthNumByUserId" resultType="UserCertifiedModel">
-        SELECT * FROM User_Certified WHERE user_id = #{user_id} AND is_deleted = 0
+        SELECT * FROM User_Certified WHERE user_id = #{userId} AND is_deleted = 0
     </select>
 
     <update id="setUserAuth">

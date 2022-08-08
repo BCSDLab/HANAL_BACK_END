@@ -11,5 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AuthCode {
 
+    private Long userId;
     private String authCode;
 }

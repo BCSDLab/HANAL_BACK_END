@@ -7,10 +7,10 @@ import java.util.Map;
 
 public interface UserService {
 
-    Map<String, String> signUp(UserRequest request);
-    Map<String, String> login(UserRequest request);
+    UserResponse signUp(UserRequest request);
+    Object login(UserRequest request);
     Map<String, String> refresh();
-    String sendAuthMail();
+    Map<String, Long> sendAuthMail(UserRequest request);
     String verifyAuthMail(AuthCode authCode);
     UserResponse getMe();
     UserResponse updateDepartment(UserRequest request);

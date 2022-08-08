@@ -5,7 +5,6 @@ import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserRequest;
 import com.bcsdlab.biseo.dto.user.UserResponse;
-import com.bcsdlab.biseo.enums.AuthType;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.mapper.UserMapper;
@@ -14,7 +13,6 @@ import com.bcsdlab.biseo.service.UserService;
 import com.bcsdlab.biseo.util.JwtUtil;
 import com.bcsdlab.biseo.util.MailUtil;
 import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -36,7 +34,7 @@ public class UserServiceImpl implements UserService {
     private final MailUtil mailUtil;
 
     @Override
-    public Map<String, String> signUp(UserRequest request) {
+    public UserResponse signUp(UserRequest request) {
         if (userRepository.findByAccountId(request.getAccountId()) != null) {
             throw new RuntimeException("존재하는 계정입니다.");
         }
@@ -59,14 +57,12 @@ public class UserServiceImpl implements UserService {
         // db 저장
         userRepository.signUp(user);
 
-        // 저장 후 유저 정보 토큰으로 리턴
-        Map<String, String> token = new HashMap<>();
-        token.put("auth", jwtUtil.generateToken(user.getId(), 1, 0));
-        return token;
+        // 저장 후 이메일 인증을 위해 유저 정보 리턴
+        return getUserResponse(user.getId());
     }
 
     @Override
-    public Map<String, String> login(UserRequest request) {
+    public Object login(UserRequest request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("존재하지 않는 아이디입니다.");
@@ -80,11 +76,10 @@ public class UserServiceImpl implements UserService {
         if (user.getIsAuth()) {
             token.put("access", jwtUtil.generateToken(user.getId(),1,  1));
             token.put("refresh", jwtUtil.generateToken(user.getId(),2,  2));
+            return token;
         } else {
-            token.put("auth", jwtUtil.generateToken(user.getId(),1, 0));
+            return getUserResponse(user.getId());
         }
-
-        return token;
     }
 
     @Override
@@ -101,19 +96,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String sendAuthMail() {
-        Map<String, Object> userInfo = findUserInfoInToken();
-        Long id = Long.parseLong(userInfo.get("id").toString());
-        int authType = Integer.parseInt(userInfo.get("auth").toString());
-        UserModel user = userRepository.findById(id);
+    public Map<String, Long> sendAuthMail(UserRequest request) {
+        UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
 
         // 이전 발송 메일이랑 시간 차이 계산
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(id);
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(user.getId());
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        if (recentAuthNum != null && now.getTime() - recentAuthNum.getCreated_at().getTime() < 5 * 60 * 1000) {
+        if (recentAuthNum != null && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
             throw new RuntimeException("메일 전송이 불가능합니다.");
         }
         if (recentAuthNum != null) {
@@ -125,40 +117,29 @@ public class UserServiceImpl implements UserService {
 
         // 인증번호 저장
         UserCertifiedModel userCertifiedModel = new UserCertifiedModel();
-        userCertifiedModel.setUser_id(id);
-        userCertifiedModel.setAuth_num(authNum);
-        if (authType == 0) {
-            userCertifiedModel.setAuth_type(AuthType.SIGNUP);
-        } else if (authType == 1) {
-            userCertifiedModel.setAuth_type(AuthType.PASSWORD);
-        }
+        userCertifiedModel.setUserId(user.getId());
+        userCertifiedModel.setAuthNum(authNum);
         userRepository.addAuthNum(userCertifiedModel);
-        return "인증번호가 발송되었습니다.";
+
+        Map<String, Long> map = new HashMap<>();
+        map.put("userId", user.getId());
+        return map;
     }
 
     @Override
     public String verifyAuthMail(AuthCode authCode) {
-        Map<String, Object> userInfo = findUserInfoInToken();
-        Long id = Long.parseLong(userInfo.get("id").toString());
-        int authType = Integer.parseInt(userInfo.get("auth").toString());
-
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(id);
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(authCode.getUserId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (authType == 0 && recentAuthNum.getAuth_type() == AuthType.PASSWORD
-            ||authType == 1 && recentAuthNum.getAuth_type() == AuthType.SIGNUP) {
-            throw new RuntimeException("잘못된 인증입니다.");
-        }
-
-        if (!authCode.getAuthCode().equals(recentAuthNum.getAuth_num())) {
+        if (!authCode.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
-        userRepository.setUserAuth(id);
+        userRepository.setUserAuth(authCode.getUserId());
         return "인증이 완료되었습니다.";
     }
 
@@ -209,7 +190,7 @@ public class UserServiceImpl implements UserService {
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 4; i++) {
-            sb.append(random.nextInt(9));
+            sb.append(random.nextInt(10));
         }
         return sb.toString();
     }

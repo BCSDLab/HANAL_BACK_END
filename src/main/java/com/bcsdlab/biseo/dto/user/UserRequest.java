@@ -20,7 +20,7 @@ public class UserRequest {
     // TODO : 추가적인 validation 필요
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "이름이 비어있으면 안됩니다.")
     private String name;
-    @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.Login.class}, message = "이메일은 비어있으면 안됩니다.")
+    @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.Login.class, ValidationGroups.Mail.class}, message = "아이디가 비어있으면 안됩니다.")
     private String accountId;
     @NotNull(groups = {ValidationGroups.SignUp.class, ValidationGroups.Login.class}, message = "비밀번호가 비어있으면 안됩니다.")
     private String password;

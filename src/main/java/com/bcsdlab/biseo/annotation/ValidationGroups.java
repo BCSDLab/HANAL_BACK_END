@@ -6,6 +6,7 @@ public class ValidationGroups {
 
     public interface SignUp extends Default {};
     public interface Login extends Default {};
+    public interface Mail extends Default {};
     public interface ChangeDepartment extends Default {};
 
 }
