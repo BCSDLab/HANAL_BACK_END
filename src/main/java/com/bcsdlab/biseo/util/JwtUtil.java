@@ -51,6 +51,7 @@ public class JwtUtil {
             case 2:
                 key = refresh;
                 calendar.add(Calendar.MINUTE, 40);
+                break;
             default:
                 throw new RuntimeException("잘못된 인증 타입입니다.");
         }
