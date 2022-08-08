@@ -1,5 +1,6 @@
 package com.bcsdlab.biseo.serviceImpl;
 
+import com.bcsdlab.biseo.dto.user.AuthCode;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserRequest;
@@ -20,10 +21,12 @@ import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
@@ -132,6 +135,32 @@ public class UserServiceImpl implements UserService {
         return "인증번호가 발송되었습니다.";
     }
 
+    @Override
+    public String verifyAuthMail(AuthCode authCode) {
+        Map<String, Object> userInfo = findUserInfoInToken();
+        Long id = Long.parseLong(userInfo.get("id").toString());
+        int authType = Integer.parseInt(userInfo.get("auth").toString());
+
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(id);
+
+        if (recentAuthNum == null) {
+            throw new RuntimeException("이메일 인증을 먼저 해주세요");
+        }
+
+        if (authType == 0 && recentAuthNum.getAuth_type() == AuthType.PASSWORD
+            ||authType == 1 && recentAuthNum.getAuth_type() == AuthType.SIGNUP) {
+            throw new RuntimeException("잘못된 인증입니다.");
+        }
+
+        if (!authCode.getAuthCode().equals(recentAuthNum.getAuth_num())) {
+            throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
+        }
+
+        userRepository.deleteAuthNumById(recentAuthNum.getId());
+        userRepository.setUserAuth(id);
+        return "인증이 완료되었습니다.";
+    }
+
     private Map<String, Object> findUserInfoInToken() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("Authorization");
@@ -146,6 +175,5 @@ public class UserServiceImpl implements UserService {
             sb.append(random.nextInt(9));
         }
         return sb.toString();
-
     }
 }

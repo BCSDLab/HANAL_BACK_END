@@ -13,5 +13,6 @@ public interface UserRepository {
     void addAuthNum(UserCertifiedModel userCertifiedModel);
     UserCertifiedModel findRecentAuthNumByUserId(Long user_id);
     void deleteAuthNumById(Long id);
+    void setUserAuth(Long id);
 
 }

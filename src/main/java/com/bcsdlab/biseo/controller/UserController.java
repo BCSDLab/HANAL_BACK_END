@@ -2,6 +2,7 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
+import com.bcsdlab.biseo.dto.user.AuthCode;
 import com.bcsdlab.biseo.dto.user.UserRequest;
 import com.bcsdlab.biseo.dto.user.UserResponse;
 import com.bcsdlab.biseo.service.UserService;
@@ -41,5 +42,11 @@ public class UserController {
     @Auth
     public ResponseEntity<String> sendAuthMail() {
         return new ResponseEntity<>(userService.sendAuthMail(), HttpStatus.OK);
+    }
+
+    @PostMapping("/mail-verification")
+    @Auth
+    public ResponseEntity<String> verifyAuthMail(@RequestBody AuthCode authCode) {
+        return new ResponseEntity<>(userService.verifyAuthMail(authCode), HttpStatus.OK);
     }
 }

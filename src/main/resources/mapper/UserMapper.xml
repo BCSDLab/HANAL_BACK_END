@@ -29,4 +29,7 @@
         SELECT * FROM User_Certified WHERE user_id = #{user_id} AND is_deleted = 0
     </select>
 
+    <update id="setUserAuth">
+        UPDATE User SET is_auth = 1 WHERE id = #{id}
+    </update>
 </mapper>
