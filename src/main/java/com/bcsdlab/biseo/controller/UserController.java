@@ -5,6 +5,7 @@ import com.bcsdlab.biseo.annotation.ValidationGroups;
 import com.bcsdlab.biseo.dto.user.AuthCode;
 import com.bcsdlab.biseo.dto.user.UserRequest;
 import com.bcsdlab.biseo.dto.user.UserResponse;
+import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.service.UserService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

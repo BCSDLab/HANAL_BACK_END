@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
         userRepository.signUp(user);
 
         // 저장 후 이메일 인증을 위해 유저 정보 리턴
-        return getUserResponse(user.getId());
+        return getUserResponse(userRepository.findById(user.getId()));
     }
 
     @Override
@@ -74,25 +74,28 @@ public class UserServiceImpl implements UserService {
 
         Map<String, String> token = new HashMap<>();
         if (user.getIsAuth()) {
-            token.put("access", jwtUtil.generateToken(user.getId(),1,  1));
-            token.put("refresh", jwtUtil.generateToken(user.getId(),2,  2));
+            // 200
+            token.put("access", jwtUtil.getAccessToken(user));
+            token.put("refresh", jwtUtil.getRefreshToken(user));
             return token;
         } else {
-            return getUserResponse(user.getId());
+            // 401?
+            return getUserResponse(user);
         }
     }
 
     @Override
     public Map<String, String> refresh() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader("Authorization");
-        jwtUtil.isValid(token, 2);
-        Long id = Long.parseLong(findUserInfoInToken().get("id").toString());
-
-        Map<String, String> newToken = new HashMap<>();
-        newToken.put("access", jwtUtil.generateToken(id, 1,1));
-        newToken.put("refresh", jwtUtil.generateToken(id, 2, 2));
-        return newToken;
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//        String token = request.getHeader("Authorization");
+//        jwtUtil.isValid(token, 2);
+//        Long id = Long.parseLong(findUserInfoInToken().get("id").toString());
+//
+//        Map<String, String> newToken = new HashMap<>();
+//        newToken.put("access", jwtUtil.generateToken(id, 1,1));
+//        newToken.put("refresh", jwtUtil.generateToken(id, 2, 2));
+//        return newToken;
+        return null;
     }
 
     @Override
@@ -148,7 +151,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> userInfo = findUserInfoInToken();
         Long id = Long.parseLong(userInfo.get("id").toString());
 
-        return getUserResponse(id);
+        return getUserResponse(userRepository.findById(id));
     }
 
     @Override
@@ -165,13 +168,12 @@ public class UserServiceImpl implements UserService {
 
         userRepository.updateDepartment(user);
 
-        return getUserResponse(id);
+        return getUserResponse(userRepository.findById(id));
     }
 
-    private UserResponse getUserResponse(Long id) {
-        UserModel me = userRepository.findById(id);
+    private UserResponse getUserResponse(UserModel me) {
         if (me == null) {
-            throw new RuntimeException("잘못된 정보입니다.");
+            throw new RuntimeException("유저가 존재하지 않습니다.");
         }
         UserResponse response = UserMapper.INSTANCE.toUserResponse(me);
         response.setGrade(me.getDepartment() % 10);
@@ -183,7 +185,8 @@ public class UserServiceImpl implements UserService {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("Authorization");
 
-        return jwtUtil.getPayloads(token);
+//        return jwtUtil.getPayloads(token);
+        return null;
     }
 
     private String makeRandomNumber() {
