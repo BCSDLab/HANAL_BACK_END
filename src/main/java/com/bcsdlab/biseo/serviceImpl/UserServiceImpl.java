@@ -1,5 +1,6 @@
 package com.bcsdlab.biseo.serviceImpl;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bcsdlab.biseo.dto.user.AuthCode;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
@@ -148,16 +149,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getMe() {
-        Map<String, Object> userInfo = findUserInfoInToken();
-        Long id = Long.parseLong(userInfo.get("id").toString());
+        DecodedJWT userInfo = findUserInfoInToken();
+        Long id = Long.valueOf(userInfo.getAudience().get(0));
 
         return getUserResponse(userRepository.findById(id));
     }
 
     @Override
     public UserResponse updateDepartment(UserRequest request) {
-        Map<String, Object> userInfo = findUserInfoInToken();
-        Long id = Long.parseLong(userInfo.get("id").toString());
+        DecodedJWT userInfo = findUserInfoInToken();
+        Long id = Long.valueOf(userInfo.getAudience().get(0));
         UserModel user = new UserModel();
         user.setId(id);
         try {
@@ -181,12 +182,11 @@ public class UserServiceImpl implements UserService {
         return response;
     }
 
-    private Map<String, Object> findUserInfoInToken() {
+    private DecodedJWT findUserInfoInToken() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("Authorization");
 
-//        return jwtUtil.getPayloads(token);
-        return null;
+        return jwtUtil.getDecodedJWT(token.substring(7));
     }
 
     private String makeRandomNumber() {
