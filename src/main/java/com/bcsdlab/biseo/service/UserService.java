@@ -1,17 +1,18 @@
 package com.bcsdlab.biseo.service;
 
 import com.bcsdlab.biseo.dto.user.AuthCode;
-import com.bcsdlab.biseo.dto.user.UserRequest;
-import com.bcsdlab.biseo.dto.user.UserResponse;
+import com.bcsdlab.biseo.dto.user.AuthDTO;
+import com.bcsdlab.biseo.dto.user.UserRequestDTO;
+import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import java.util.Map;
 
 public interface UserService {
 
-    UserResponse signUp(UserRequest request);
-    Object login(UserRequest request);
-    Map<String, String> refresh();
-    Map<String, Long> sendAuthMail(UserRequest request);
+    UserResponseDTO signUp(UserRequestDTO request);
+    AuthDTO login(UserRequestDTO request);
+    AuthDTO refresh(AuthDTO authDTO);
+    Map<String, Long> sendAuthMail(UserRequestDTO request);
     String verifyAuthMail(AuthCode authCode);
-    UserResponse getMe();
-    UserResponse updateDepartment(UserRequest request);
+    UserResponseDTO getMe();
+    UserResponseDTO updateDepartment(UserRequestDTO request);
 }

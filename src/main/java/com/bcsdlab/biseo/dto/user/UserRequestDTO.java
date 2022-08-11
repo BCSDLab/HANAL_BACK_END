@@ -1,9 +1,7 @@
 package com.bcsdlab.biseo.dto.user;
 
 import com.bcsdlab.biseo.annotation.ValidationGroups;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +13,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequest {
+public class UserRequestDTO {
 
     // TODO : 추가적인 validation 필요
     @NotNull(groups = {ValidationGroups.SignUp.class}, message = "이름이 비어있으면 안됩니다.")

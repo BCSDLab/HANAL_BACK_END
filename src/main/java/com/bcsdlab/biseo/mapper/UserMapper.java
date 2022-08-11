@@ -1,8 +1,8 @@
 package com.bcsdlab.biseo.mapper;
 
 import com.bcsdlab.biseo.dto.user.UserModel;
-import com.bcsdlab.biseo.dto.user.UserRequest;
-import com.bcsdlab.biseo.dto.user.UserResponse;
+import com.bcsdlab.biseo.dto.user.UserRequestDTO;
+import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -14,8 +14,8 @@ public interface UserMapper {
 
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "department", ignore = true)
-    UserModel toUserModel(UserRequest userRequest);
+    UserModel toUserModel(UserRequestDTO userRequestDTO);
 
     @Mapping(target = "department", ignore = true)
-    UserResponse toUserResponse(UserModel userModel);
+    UserResponseDTO toUserResponse(UserModel userModel);
 }

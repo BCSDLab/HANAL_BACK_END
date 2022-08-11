@@ -34,7 +34,7 @@ public class JwtUtil {
             .withSubject("access")
             .withAudience(user.getId().toString())
             .withClaim("type", user.getUserType().getLevel())
-            .withExpiresAt(Date.from(LocalDateTime.now().plusMinutes(10).atZone(ZoneId.systemDefault()).toInstant()))
+            .withExpiresAt(Date.from(LocalDateTime.now().plusDays(1).atZone(ZoneId.systemDefault()).toInstant()))
             .sign(key);
     }
 
@@ -42,7 +42,7 @@ public class JwtUtil {
         return JWT.create()
             .withSubject("refresh")
             .withAudience(user.getId().toString())
-            .withExpiresAt(Date.from(LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()))
+            .withExpiresAt(Date.from(LocalDateTime.now().plusWeeks(1).atZone(ZoneId.systemDefault()).toInstant()))
             .sign(key);
     }
 

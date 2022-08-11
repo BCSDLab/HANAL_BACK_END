@@ -2,10 +2,11 @@ package com.bcsdlab.biseo.serviceImpl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bcsdlab.biseo.dto.user.AuthCode;
+import com.bcsdlab.biseo.dto.user.AuthDTO;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
-import com.bcsdlab.biseo.dto.user.UserRequest;
-import com.bcsdlab.biseo.dto.user.UserResponse;
+import com.bcsdlab.biseo.dto.user.UserRequestDTO;
+import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.mapper.UserMapper;
@@ -14,12 +15,19 @@ import com.bcsdlab.biseo.service.UserService;
 import com.bcsdlab.biseo.util.JwtUtil;
 import com.bcsdlab.biseo.util.MailUtil;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -33,9 +41,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final MailUtil mailUtil;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public UserResponse signUp(UserRequest request) {
+    public UserResponseDTO signUp(UserRequestDTO request) {
         if (userRepository.findByAccountId(request.getAccountId()) != null) {
             throw new RuntimeException("존재하는 계정입니다.");
         }
@@ -63,7 +72,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Object login(UserRequest request) {
+    public AuthDTO login(UserRequestDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("존재하지 않는 아이디입니다.");
@@ -76,31 +85,54 @@ public class UserServiceImpl implements UserService {
         Map<String, String> token = new HashMap<>();
         if (user.getIsAuth()) {
             // 200
-            token.put("access", jwtUtil.getAccessToken(user));
-            token.put("refresh", jwtUtil.getRefreshToken(user));
-            return token;
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            String accessToken = jwtUtil.getAccessToken(user);
+            String key = String.format("user:%s:refresh", user.getAccountId());
+            Optional<String> refreshTokenOptional = Optional.ofNullable(operations.get(user.getAccountId()))
+                .filter(t -> !jwtUtil.isExpired(t));
+
+            String refreshToken = refreshTokenOptional.orElseGet(() ->{
+                String newToken = jwtUtil.getRefreshToken(user);
+                operations.set(key, newToken);
+                return newToken;
+            });
+            return new AuthDTO(user.getId(), accessToken, refreshToken);
         } else {
             // 401?
-            return getUserResponse(user);
+            AuthDTO response = new AuthDTO();
+            response.setUserId(user.getId());
+            return response;
         }
     }
 
     @Override
-    public Map<String, String> refresh() {
-//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-//        String token = request.getHeader("Authorization");
-//        jwtUtil.isValid(token, 2);
-//        Long id = Long.parseLong(findUserInfoInToken().get("id").toString());
-//
-//        Map<String, String> newToken = new HashMap<>();
-//        newToken.put("access", jwtUtil.generateToken(id, 1,1));
-//        newToken.put("refresh", jwtUtil.generateToken(id, 2, 2));
-//        return newToken;
-        return null;
+    public AuthDTO refresh(AuthDTO authDTO) {
+        if (!jwtUtil.isValid(authDTO.getRefresh(), "refresh")){
+            throw new RuntimeException("토큰이 만료되었거나, 올바르지 않습니다.");
+        }
+        DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(authDTO.getRefresh());
+        Long userId = Long.parseLong(decodedRefreshJWT.getAudience().get(0));
+        UserModel user = userRepository.findById(userId);
+
+        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+        String key = String.format("user:%s:refresh", user.getAccountId());
+        String refreshToken = Optional.ofNullable(operations.get(key))
+            .filter(t -> t.equals(authDTO.getRefresh()))
+            .orElseThrow(() -> new RuntimeException("올바르지 않은 토큰입니다. 다시 로그인해야 합니다."));
+
+        String accessToken = jwtUtil.getAccessToken(user);
+
+        // 3일 뒤 만료라면
+        if (LocalDateTime.now().plusDays(3).isAfter(decodedRefreshJWT.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())) {
+            refreshToken = jwtUtil.getRefreshToken(user);
+            operations.set(key, refreshToken);
+        }
+
+        return new AuthDTO(user.getId(), accessToken, refreshToken);
     }
 
     @Override
-    public Map<String, Long> sendAuthMail(UserRequest request) {
+    public Map<String, Long> sendAuthMail(UserRequestDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
@@ -148,7 +180,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMe() {
+    public UserResponseDTO getMe() {
         DecodedJWT userInfo = findUserInfoInToken();
         Long id = Long.valueOf(userInfo.getAudience().get(0));
 
@@ -156,7 +188,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateDepartment(UserRequest request) {
+    public UserResponseDTO updateDepartment(UserRequestDTO request) {
         DecodedJWT userInfo = findUserInfoInToken();
         Long id = Long.valueOf(userInfo.getAudience().get(0));
         UserModel user = new UserModel();
@@ -172,11 +204,11 @@ public class UserServiceImpl implements UserService {
         return getUserResponse(userRepository.findById(id));
     }
 
-    private UserResponse getUserResponse(UserModel me) {
+    private UserResponseDTO getUserResponse(UserModel me) {
         if (me == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
-        UserResponse response = UserMapper.INSTANCE.toUserResponse(me);
+        UserResponseDTO response = UserMapper.INSTANCE.toUserResponse(me);
         response.setGrade(me.getDepartment() % 10);
         response.setDepartment(Department.getDepartment(me.getDepartment() / 10 * 10));
         return response;
