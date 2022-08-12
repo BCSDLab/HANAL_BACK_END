@@ -4,6 +4,7 @@ import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
 import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
 import com.bcsdlab.biseo.dto.user.JwtDTO;
+import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.service.UserService;
@@ -71,5 +72,11 @@ public class UserController {
     @Auth
     public ResponseEntity<UserResponseDTO> updateDepartment(@RequestBody @Validated(ValidationGroups.ChangeDepartment.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.updateDepartment(request), HttpStatus.OK);
+    }
+
+    @PostMapping("me/password")
+    @Auth
+    public ResponseEntity<String> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
+        return new ResponseEntity<>(userService.updatePassword(passwordDTO), HttpStatus.OK);
     }
 }

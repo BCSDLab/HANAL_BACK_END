@@ -5,6 +5,7 @@ import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
 import com.bcsdlab.biseo.dto.user.JwtDTO;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
+import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
@@ -249,6 +250,20 @@ public class UserServiceImpl implements UserService {
         userRepository.updateDepartment(user);
 
         return getUserResponse(userRepository.findById(id));
+    }
+
+    @Override
+    public String updatePassword(UserPasswordDTO passwordDTO) {
+        DecodedJWT decodedJWT = findUserInfoInToken();
+        UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
+
+        if (!BCrypt.checkpw(passwordDTO.getPassword(), user.getPassword())) {
+            throw new RuntimeException("기존 비밀번호가 다릅니다.");
+        }
+
+        user.setPassword(BCrypt.hashpw(passwordDTO.getNewPassword(), BCrypt.gensalt()));
+        userRepository.updatePassword(user);
+        return "비밀번호가 변경되었습니다.";
     }
 
     private UserResponseDTO getUserResponse(UserModel me) {
