@@ -15,7 +15,6 @@ import com.bcsdlab.biseo.service.UserService;
 import com.bcsdlab.biseo.util.JwtUtil;
 import com.bcsdlab.biseo.util.MailUtil;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
@@ -59,7 +57,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("잘못된 학년입니다.");
         }
         try {
-            user.setDepartment(Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
+            user.setDepartment(
+                Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("존재하지 않는 학과입니다.");
         }
@@ -82,32 +81,49 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        Map<String, String> token = new HashMap<>();
-        if (user.getIsAuth()) {
-            // 200
-            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-            String accessToken = jwtUtil.getAccessToken(user);
-            String key = String.format("user:%s:refresh", user.getAccountId());
-            Optional<String> refreshTokenOptional = Optional.ofNullable(operations.get(user.getAccountId()))
-                .filter(t -> !jwtUtil.isExpired(t));
+        AuthDTO response = new AuthDTO();
+        response.setUserId(user.getId());
 
-            String refreshToken = refreshTokenOptional.orElseGet(() ->{
-                String newToken = jwtUtil.getRefreshToken(user);
-                operations.set(key, newToken);
-                return newToken;
-            });
-            return new AuthDTO(user.getId(), accessToken, refreshToken);
-        } else {
-            // 401?
-            AuthDTO response = new AuthDTO();
-            response.setUserId(user.getId());
+        // 401?
+        if (!user.getIsAuth()) {
             return response;
         }
+
+        // 200
+        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+        String accessToken = jwtUtil.getAccessToken(user);
+        String key = String.format("user:%s:refresh", user.getAccountId());
+        Optional<String> refreshTokenOptional = Optional.ofNullable(
+                operations.get(user.getAccountId()))
+            .filter(t -> !jwtUtil.isExpired(t));
+
+        String refreshToken = refreshTokenOptional.orElseGet(() -> {
+            String newToken = jwtUtil.getRefreshToken(user);
+            operations.set(key, newToken);
+            return newToken;
+        });
+        return new AuthDTO(user.getId(), accessToken, refreshToken);
+    }
+
+    @Override
+    public String logout() {
+        DecodedJWT decodedJWT = findUserInfoInToken();
+        UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
+
+        String key = String.format("user:%s:refresh", user.getAccountId());
+        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+
+        String refreshToken = operations.get(key);
+        if (refreshToken != null) {
+            // ValueOperations 는 delete 가 없다고 한다....
+            stringRedisTemplate.delete(key);
+        }
+        return "로그아웃 완료";
     }
 
     @Override
     public AuthDTO refresh(AuthDTO authDTO) {
-        if (!jwtUtil.isValid(authDTO.getRefresh(), "refresh")){
+        if (!jwtUtil.isValid(authDTO.getRefresh(), "refresh")) {
             throw new RuntimeException("토큰이 만료되었거나, 올바르지 않습니다.");
         }
         DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(authDTO.getRefresh());
@@ -123,7 +139,9 @@ public class UserServiceImpl implements UserService {
         String accessToken = jwtUtil.getAccessToken(user);
 
         // 3일 뒤 만료라면
-        if (LocalDateTime.now().plusDays(3).isAfter(decodedRefreshJWT.getExpiresAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())) {
+        if (LocalDateTime.now().plusDays(3).isAfter(
+            decodedRefreshJWT.getExpiresAt().toInstant().atZone(ZoneId.systemDefault())
+                .toLocalDateTime())) {
             refreshToken = jwtUtil.getRefreshToken(user);
             operations.set(key, refreshToken);
         }
@@ -141,7 +159,8 @@ public class UserServiceImpl implements UserService {
         // 이전 발송 메일이랑 시간 차이 계산
         UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(user.getId());
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        if (recentAuthNum != null && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
+        if (recentAuthNum != null
+            && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
             throw new RuntimeException("메일 전송이 불가능합니다.");
         }
         if (recentAuthNum != null) {
@@ -164,7 +183,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String verifyAuthMail(AuthCode authCode) {
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(authCode.getUserId());
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(
+            authCode.getUserId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
@@ -194,7 +214,8 @@ public class UserServiceImpl implements UserService {
         UserModel user = new UserModel();
         user.setId(id);
         try {
-            user.setDepartment(Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
+            user.setDepartment(
+                Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("존재하지 않는 학과입니다.");
         }

@@ -35,17 +35,23 @@ public class UserController {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
+    @PostMapping("/logout")
+    @Auth
+    public ResponseEntity<String> logout() {
+        return new ResponseEntity<>(userService.logout(), HttpStatus.OK);
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<AuthDTO> refresh(@RequestBody AuthDTO authDTO) {
         return new ResponseEntity<>(userService.refresh(authDTO), HttpStatus.OK);
     }
 
-    @PostMapping("/mail-auth")
+    @PostMapping("/send-mail")
     public ResponseEntity<Map<String, Long>> sendAuthMail(@RequestBody @Validated(ValidationGroups.Mail.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.sendAuthMail(request), HttpStatus.OK);
     }
 
-    @PostMapping("/mail-verification")
+    @PostMapping("/verify-mail")
     public ResponseEntity<String> verifyAuthMail(@RequestBody AuthCode authCode) {
         return new ResponseEntity<>(userService.verifyAuthMail(authCode), HttpStatus.OK);
     }

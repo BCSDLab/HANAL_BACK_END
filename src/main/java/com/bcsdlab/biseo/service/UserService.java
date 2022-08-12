@@ -10,6 +10,7 @@ public interface UserService {
 
     UserResponseDTO signUp(UserRequestDTO request);
     AuthDTO login(UserRequestDTO request);
+    String logout();
     AuthDTO refresh(AuthDTO authDTO);
     Map<String, Long> sendAuthMail(UserRequestDTO request);
     String verifyAuthMail(AuthCode authCode);
