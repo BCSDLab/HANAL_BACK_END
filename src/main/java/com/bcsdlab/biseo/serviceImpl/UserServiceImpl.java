@@ -1,8 +1,8 @@
 package com.bcsdlab.biseo.serviceImpl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.bcsdlab.biseo.dto.user.AuthCode;
-import com.bcsdlab.biseo.dto.user.AuthDTO;
+import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
+import com.bcsdlab.biseo.dto.user.JwtDTO;
 import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthDTO login(UserRequestDTO request) {
+    public JwtDTO login(UserRequestDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("존재하지 않는 아이디입니다.");
@@ -81,8 +81,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        AuthDTO response = new AuthDTO();
-        response.setUserId(user.getId());
+        JwtDTO response = new JwtDTO();
+        response.setUserAccountId(user.getAccountId());
 
         // 401?
         if (!user.getIsAuth()) {
@@ -102,7 +102,10 @@ public class UserServiceImpl implements UserService {
             operations.set(key, newToken);
             return newToken;
         });
-        return new AuthDTO(user.getId(), accessToken, refreshToken);
+
+        response.setAccess(accessToken);
+        response.setRefresh(refreshToken);
+        return response;
     }
 
     @Override
@@ -122,18 +125,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthDTO refresh(AuthDTO authDTO) {
-        if (!jwtUtil.isValid(authDTO.getRefresh(), "refresh")) {
+    public JwtDTO refresh(JwtDTO jwtDTO) {
+        if (!jwtUtil.isValid(jwtDTO.getRefresh(), "refresh")) {
             throw new RuntimeException("토큰이 만료되었거나, 올바르지 않습니다.");
         }
-        DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(authDTO.getRefresh());
+        DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(jwtDTO.getRefresh());
         Long userId = Long.parseLong(decodedRefreshJWT.getAudience().get(0));
         UserModel user = userRepository.findById(userId);
 
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
         String key = String.format("user:%s:refresh", user.getAccountId());
         String refreshToken = Optional.ofNullable(operations.get(key))
-            .filter(t -> t.equals(authDTO.getRefresh()))
+            .filter(t -> t.equals(jwtDTO.getRefresh()))
             .orElseThrow(() -> new RuntimeException("올바르지 않은 토큰입니다. 다시 로그인해야 합니다."));
 
         String accessToken = jwtUtil.getAccessToken(user);
@@ -146,18 +149,18 @@ public class UserServiceImpl implements UserService {
             operations.set(key, refreshToken);
         }
 
-        return new AuthDTO(user.getId(), accessToken, refreshToken);
+        return new JwtDTO(user.getAccountId(), accessToken, refreshToken);
     }
 
     @Override
-    public Map<String, Long> sendAuthMail(UserRequestDTO request) {
+    public Map<String, String> sendAuthMail(UserRequestDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
 
         // 이전 발송 메일이랑 시간 차이 계산
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(user.getId());
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId());
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (recentAuthNum != null
             && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
@@ -168,7 +171,7 @@ public class UserServiceImpl implements UserService {
         }
         // 메일 발송
         String authNum = makeRandomNumber();
-        mailUtil.sendMail(user, authNum);
+        mailUtil.sendAuthCodeMail(user, authNum);
 
         // 인증번호 저장
         UserCertifiedModel userCertifiedModel = new UserCertifiedModel();
@@ -176,27 +179,50 @@ public class UserServiceImpl implements UserService {
         userCertifiedModel.setAuthNum(authNum);
         userRepository.addAuthNum(userCertifiedModel);
 
-        Map<String, Long> map = new HashMap<>();
-        map.put("userId", user.getId());
+        Map<String, String> map = new HashMap<>();
+        map.put("accountId", user.getAccountId());
         return map;
     }
 
     @Override
-    public String verifyAuthMail(AuthCode authCode) {
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserId(
-            authCode.getUserId());
+    public String certifySignUpMail(CertificationCodeDTO certificationCodeDTO) {
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
+            certificationCodeDTO.getAccountId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (!authCode.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+        if (!certificationCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
-        userRepository.setUserAuth(authCode.getUserId());
+        userRepository.setUserAuth(userRepository.findByAccountId(certificationCodeDTO.getAccountId()).getId());
         return "인증이 완료되었습니다.";
+    }
+
+    @Override
+    public String certifyPasswordMail(CertificationCodeDTO certificationCodeDTO) {
+        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
+            certificationCodeDTO.getAccountId());
+
+        if (recentAuthNum == null) {
+            throw new RuntimeException("이메일 인증을 먼저 해주세요");
+        }
+
+        if (!certificationCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+            throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
+        }
+
+        userRepository.deleteAuthNumById(recentAuthNum.getId());
+        UserModel user = userRepository.findById(recentAuthNum.getUserId());
+        String newPassword = makeNewPassword();
+        mailUtil.sendPasswordMail(user, newPassword);
+        user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        userRepository.updatePassword(user);
+
+        return "비밀번호가 메일로 전송되었습니다.";
     }
 
     @Override
@@ -248,6 +274,24 @@ public class UserServiceImpl implements UserService {
         for (int i = 0; i < 4; i++) {
             sb.append(random.nextInt(10));
         }
+        return sb.toString();
+    }
+
+    private String makeNewPassword() {
+        final char[] charSet = new char[] {
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            '!', '@', '#', '$', '%', '^', '&' };
+
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+
+        int len = charSet.length;
+        for (int i=0; i<10; i++) {
+            sb.append(charSet[random.nextInt(len)]);
+        }
+
         return sb.toString();
     }
 }

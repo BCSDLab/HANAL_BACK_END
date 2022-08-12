@@ -9,8 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthCode {
+public class JwtDTO {
 
-    private Long userId;
-    private String authCode;
+    String userAccountId;
+    String access;
+    String refresh;
 }

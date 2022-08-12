@@ -2,8 +2,8 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
-import com.bcsdlab.biseo.dto.user.AuthCode;
-import com.bcsdlab.biseo.dto.user.AuthDTO;
+import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
+import com.bcsdlab.biseo.dto.user.JwtDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.service.UserService;
@@ -25,13 +25,13 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/sign-up")
+    @PostMapping("/signup")
     public ResponseEntity<UserResponseDTO> signUp(@RequestBody @Validated(ValidationGroups.SignUp.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.signUp(request), HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthDTO> login(@RequestBody @Validated(ValidationGroups.Login.class) UserRequestDTO request) {
+    public ResponseEntity<JwtDTO> login(@RequestBody @Validated(ValidationGroups.Login.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
@@ -42,18 +42,23 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthDTO> refresh(@RequestBody AuthDTO authDTO) {
-        return new ResponseEntity<>(userService.refresh(authDTO), HttpStatus.OK);
+    public ResponseEntity<JwtDTO> refresh(@RequestBody JwtDTO jwtDTO) {
+        return new ResponseEntity<>(userService.refresh(jwtDTO), HttpStatus.OK);
     }
 
     @PostMapping("/send-mail")
-    public ResponseEntity<Map<String, Long>> sendAuthMail(@RequestBody @Validated(ValidationGroups.Mail.class) UserRequestDTO request) {
+    public ResponseEntity<Map<String, String>> sendAuthMail(@RequestBody @Validated(ValidationGroups.Mail.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.sendAuthMail(request), HttpStatus.OK);
     }
 
-    @PostMapping("/verify-mail")
-    public ResponseEntity<String> verifyAuthMail(@RequestBody AuthCode authCode) {
-        return new ResponseEntity<>(userService.verifyAuthMail(authCode), HttpStatus.OK);
+    @PostMapping("/certify-signup")
+    public ResponseEntity<String> certifySignUpMail(@RequestBody CertificationCodeDTO certificationCodeDTO) {
+        return new ResponseEntity<>(userService.certifySignUpMail(certificationCodeDTO), HttpStatus.OK);
+    }
+
+    @PostMapping("/certify-password")
+    public ResponseEntity<String> certifyPasswordMail(@RequestBody CertificationCodeDTO certificationCodeDTO) {
+        return new ResponseEntity<>(userService.certifyPasswordMail(certificationCodeDTO), HttpStatus.OK);
     }
 
     @GetMapping("/me")

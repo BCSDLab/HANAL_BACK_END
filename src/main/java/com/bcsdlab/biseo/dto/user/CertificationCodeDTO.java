@@ -9,9 +9,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthDTO {
+public class CertificationCodeDTO {
 
-    Long userId;
-    String access;
-    String refresh;
+    private String accountId;
+    private String authCode;
 }

@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.service;
 
-import com.bcsdlab.biseo.dto.user.AuthCode;
-import com.bcsdlab.biseo.dto.user.AuthDTO;
+import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
+import com.bcsdlab.biseo.dto.user.JwtDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import java.util.Map;
@@ -9,11 +9,12 @@ import java.util.Map;
 public interface UserService {
 
     UserResponseDTO signUp(UserRequestDTO request);
-    AuthDTO login(UserRequestDTO request);
+    JwtDTO login(UserRequestDTO request);
     String logout();
-    AuthDTO refresh(AuthDTO authDTO);
-    Map<String, Long> sendAuthMail(UserRequestDTO request);
-    String verifyAuthMail(AuthCode authCode);
+    JwtDTO refresh(JwtDTO jwtDTO);
+    Map<String, String> sendAuthMail(UserRequestDTO request);
+    String certifySignUpMail(CertificationCodeDTO certificationCodeDTO);
+    String certifyPasswordMail(CertificationCodeDTO certificationCodeDTO);
     UserResponseDTO getMe();
     UserResponseDTO updateDepartment(UserRequestDTO request);
 }
