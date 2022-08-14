@@ -1,9 +1,9 @@
 package com.bcsdlab.biseo.serviceImpl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
+import com.bcsdlab.biseo.dto.user.AuthCodeDTO;
 import com.bcsdlab.biseo.dto.user.JwtDTO;
-import com.bcsdlab.biseo.dto.user.UserCertifiedModel;
+import com.bcsdlab.biseo.dto.user.UserAuthModel;
 import com.bcsdlab.biseo.dto.user.UserModel;
 import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
@@ -154,14 +154,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<String, String> sendAuthMail(UserRequestDTO request) {
+    public AuthCodeDTO sendAuthMail(UserRequestDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
 
         // 이전 발송 메일이랑 시간 차이 계산
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId());
+        UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId());
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (recentAuthNum != null
             && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
@@ -175,44 +175,44 @@ public class UserServiceImpl implements UserService {
         mailUtil.sendAuthCodeMail(user, authNum);
 
         // 인증번호 저장
-        UserCertifiedModel userCertifiedModel = new UserCertifiedModel();
-        userCertifiedModel.setUserId(user.getId());
-        userCertifiedModel.setAuthNum(authNum);
-        userRepository.addAuthNum(userCertifiedModel);
+        UserAuthModel userAuthModel = new UserAuthModel();
+        userAuthModel.setUserId(user.getId());
+        userAuthModel.setAuthNum(authNum);
+        userRepository.addAuthNum(userAuthModel);
 
-        Map<String, String> map = new HashMap<>();
-        map.put("accountId", user.getAccountId());
-        return map;
+        AuthCodeDTO authCodeDTO = new AuthCodeDTO();
+        authCodeDTO.setAccountId(user.getAccountId());
+        return authCodeDTO;
     }
 
     @Override
-    public String certifySignUpMail(CertificationCodeDTO certificationCodeDTO) {
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            certificationCodeDTO.getAccountId());
+    public String certifySignUpMail(AuthCodeDTO authCodeDTO) {
+        UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
+            authCodeDTO.getAccountId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (!certificationCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+        if (!authCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
-        userRepository.setUserAuth(userRepository.findByAccountId(certificationCodeDTO.getAccountId()).getId());
+        userRepository.setUserAuth(userRepository.findByAccountId(authCodeDTO.getAccountId()).getId());
         return "인증이 완료되었습니다.";
     }
 
     @Override
-    public String certifyPasswordMail(CertificationCodeDTO certificationCodeDTO) {
-        UserCertifiedModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            certificationCodeDTO.getAccountId());
+    public String certifyPasswordMail(AuthCodeDTO authCodeDTO) {
+        UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
+            authCodeDTO.getAccountId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (!certificationCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+        if (!authCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 

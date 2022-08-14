@@ -17,16 +17,16 @@
     </insert>
 
     <insert id="addAuthNum">
-        INSERT INTO User_Certified(user_id, auth_num)
+        INSERT INTO User_Auth(user_id, auth_num)
         VALUES (#{userId},#{authNum})
     </insert>
 
     <update id="deleteAuthNumById">
-        UPDATE User_Certified SET is_deleted = 1 WHERE id = #{id}
+        UPDATE User_Auth SET is_deleted = 1 WHERE id = #{id}
     </update>
 
-    <select id="findRecentAuthNumByUserAccountId" resultType="UserCertifiedModel">
-        SELECT * FROM User_Certified WHERE user_id = (
+    <select id="findRecentAuthNumByUserAccountId" resultType="UserAuthModel">
+        SELECT * FROM User_Auth WHERE user_id = (
             SELECT id FROM User WHERE account_id = #{accountId}
             ) AND is_deleted = 0
     </select>

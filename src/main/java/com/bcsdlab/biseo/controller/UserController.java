@@ -2,7 +2,7 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
-import com.bcsdlab.biseo.dto.user.CertificationCodeDTO;
+import com.bcsdlab.biseo.dto.user.AuthCodeDTO;
 import com.bcsdlab.biseo.dto.user.JwtDTO;
 import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
@@ -48,18 +48,18 @@ public class UserController {
     }
 
     @PostMapping("/send-mail")
-    public ResponseEntity<Map<String, String>> sendAuthMail(@RequestBody @Validated(ValidationGroups.Mail.class) UserRequestDTO request) {
+    public ResponseEntity<AuthCodeDTO> sendAuthMail(@RequestBody @Validated(ValidationGroups.Mail.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.sendAuthMail(request), HttpStatus.OK);
     }
 
     @PostMapping("/certify-signup")
-    public ResponseEntity<String> certifySignUpMail(@RequestBody CertificationCodeDTO certificationCodeDTO) {
-        return new ResponseEntity<>(userService.certifySignUpMail(certificationCodeDTO), HttpStatus.OK);
+    public ResponseEntity<String> certifySignUpMail(@RequestBody AuthCodeDTO authCodeDTO) {
+        return new ResponseEntity<>(userService.certifySignUpMail(authCodeDTO), HttpStatus.OK);
     }
 
     @PostMapping("/certify-password")
-    public ResponseEntity<String> certifyPasswordMail(@RequestBody CertificationCodeDTO certificationCodeDTO) {
-        return new ResponseEntity<>(userService.certifyPasswordMail(certificationCodeDTO), HttpStatus.OK);
+    public ResponseEntity<String> certifyPasswordMail(@RequestBody AuthCodeDTO authCodeDTO) {
+        return new ResponseEntity<>(userService.certifyPasswordMail(authCodeDTO), HttpStatus.OK);
     }
 
     @GetMapping("/me")

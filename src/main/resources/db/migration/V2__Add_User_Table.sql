@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS User (
     is_deleted  TINYINT(1)      NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS User_Certified (
+CREATE TABLE IF NOT EXISTS User_Auth (
     id          BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id     BIGINT          NOT NULL,
     auth_num    VARCHAR(255)    NOT NULL,
