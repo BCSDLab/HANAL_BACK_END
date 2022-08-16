@@ -7,12 +7,18 @@ plugins {
 
 group = 'com.bcsdlab'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '11'
 
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+}
+
+bootWar{
+	archivesBaseName = 'JjbacsaBackEnd'
+	archiveFileName = 'ROOT.war'
+	archiveVersion = "0.0.1"
 }
 
 repositories {
@@ -39,6 +45,18 @@ dependencies {
 	//swagger
 	implementation 'io.springfox:springfox-boot-starter:3.0.0'
 	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+	// https://mvnrepository.com/artifact/org.mindrot/jbcrypt
+	implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.7.2'
+
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis:2.7.2'
+
+	// https://mvnrepository.com/artifact/com.auth0/java-jwt
+	implementation 'com.auth0:java-jwt:4.0.0'
 }
 
 tasks.named('test') {

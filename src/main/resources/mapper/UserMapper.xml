@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bcsdlab.biseo.repository.UserRepository">
+    <select id="findByAccountId" resultType="UserModel">
+        SELECT id, name, account_id, password, student_id, user_type, department, is_auth FROM User
+        WHERE account_id = #{accountId} AND is_deleted = 0;
+    </select>
+
+    <select id="findById" resultType="UserModel">
+        SELECT id, name, account_id, password, student_id, user_type, department, is_auth FROM User
+        WHERE id = #{id} AND is_deleted = 0;
+    </select>
+
+    <insert id="signUp" parameterType="UserModel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO User(name, account_id, password, student_id, department, user_type)
+        VALUES (#{name},#{accountId},#{password},#{studentId},#{department}, #{userType})
+    </insert>
+
+    <insert id="addAuthNum">
+        INSERT INTO User_Auth(user_id, auth_num)
+        VALUES (#{userId},#{authNum})
+    </insert>
+
+    <update id="deleteAuthNumById">
+        UPDATE User_Auth SET is_deleted = 1 WHERE id = #{id}
+    </update>
+
+    <select id="findRecentAuthNumByUserAccountId" resultType="UserAuthModel">
+        SELECT * FROM User_Auth WHERE user_id = (
+            SELECT id FROM User WHERE account_id = #{accountId}
+            ) AND is_deleted = 0
+    </select>
+
+    <update id="setUserAuth">
+        UPDATE User SET is_auth = 1 WHERE id = #{id}
+    </update>
+
+    <update id="updateDepartment">
+        UPDATE User SET department = #{department} WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE User SET password = #{password} WHERE id = #{id}
+    </update>
+</mapper>
