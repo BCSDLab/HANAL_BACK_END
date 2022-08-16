@@ -15,6 +15,12 @@ configurations {
 	}
 }
 
+bootWar{
+	archivesBaseName = 'JjbacsaBackEnd'
+	archiveFileName = 'ROOT.war'
+	archiveVersion = "0.0.1"
+}
+
 repositories {
 	mavenCentral()
 }

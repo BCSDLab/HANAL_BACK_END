@@ -31,7 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         // 토큰 길이 인증
         String bearerToken = request.getHeader("Authorization");
-        if (bearerToken == null || bearerToken.length() < 8 || !bearerToken.startsWith("Bearer ")) {
+        if (!jwtUtil.isValidForm(bearerToken)) {
             throw new RuntimeException("올바르지 않은 토큰입니다.");
         }
         String token = bearerToken.substring(7);

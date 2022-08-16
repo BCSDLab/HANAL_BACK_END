@@ -46,6 +46,10 @@ public class JwtUtil {
             .sign(key);
     }
 
+    public boolean isValidForm(String token) {
+        return token != null && token.length() >= 8 && token.startsWith("Bearer ");
+    }
+
     public boolean isValid(String token, String tokenType) {
         try {
             return !JWT.require(key)

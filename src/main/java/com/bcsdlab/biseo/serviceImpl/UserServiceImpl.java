@@ -9,7 +9,6 @@ import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.UserRequestDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
-import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.UserRepository;
 import com.bcsdlab.biseo.service.UserService;
@@ -18,8 +17,6 @@ import com.bcsdlab.biseo.util.MailUtil;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import javax.servlet.http.HttpServletRequest;
@@ -49,21 +46,6 @@ public class UserServiceImpl implements UserService {
         }
         UserModel user = UserMapper.INSTANCE.toUserModel(request);
 
-        // 기타 정보 처리
-        user.setPassword(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
-        user.setUserType(UserType.NONE);
-
-        // 학과처리
-        if (request.getGrade() < 1 || request.getGrade() > 4) {
-            throw new RuntimeException("잘못된 학년입니다.");
-        }
-        try {
-            user.setDepartment(
-                Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("존재하지 않는 학과입니다.");
-        }
-
         // db 저장
         userRepository.signUp(user);
 
@@ -82,21 +64,19 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        JwtDTO response = new JwtDTO();
-        response.setUserAccountId(user.getAccountId());
-
-        // 401?
         if (!user.getIsAuth()) {
-            return response;
+            // 402
+            throw new RuntimeException("인증되지 않은 사용자입니다. 인증을 진행해주세요.");
         }
+
+        JwtDTO response = new JwtDTO();
 
         // 200
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
         String accessToken = jwtUtil.getAccessToken(user);
-        String key = String.format("user:%s:refresh", user.getAccountId());
+        String key = String.format("user:%s:refresh", user.getId());
         Optional<String> refreshTokenOptional = Optional.ofNullable(
-                operations.get(user.getAccountId()))
-            .filter(t -> !jwtUtil.isExpired(t));
+                operations.get(key)).filter(t -> !jwtUtil.isExpired(t));
 
         String refreshToken = refreshTokenOptional.orElseGet(() -> {
             String newToken = jwtUtil.getRefreshToken(user);
@@ -112,16 +92,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public String logout() {
         DecodedJWT decodedJWT = findUserInfoInToken();
-        UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
 
-        String key = String.format("user:%s:refresh", user.getAccountId());
-        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-
-        String refreshToken = operations.get(key);
-        if (refreshToken != null) {
-            // ValueOperations 는 delete 가 없다고 한다....
-            stringRedisTemplate.delete(key);
-        }
+        String key = String.format("user:%s:refresh", decodedJWT.getAudience().get(0));
+        stringRedisTemplate.delete(key);
         return "로그아웃 완료";
     }
 
@@ -131,15 +104,16 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("토큰이 만료되었거나, 올바르지 않습니다.");
         }
         DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(jwtDTO.getRefresh());
-        Long userId = Long.parseLong(decodedRefreshJWT.getAudience().get(0));
-        UserModel user = userRepository.findById(userId);
 
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-        String key = String.format("user:%s:refresh", user.getAccountId());
+        String key = String.format("user:%s:refresh", decodedRefreshJWT.getAudience().get(0));
         String refreshToken = Optional.ofNullable(operations.get(key))
             .filter(t -> t.equals(jwtDTO.getRefresh()))
             .orElseThrow(() -> new RuntimeException("올바르지 않은 토큰입니다. 다시 로그인해야 합니다."));
 
+        // 문제가 없으면 토큰 정보로 회원 조회 후 다시 토큰 생성
+        Long userId = Long.parseLong(decodedRefreshJWT.getAudience().get(0));
+        UserModel user = userRepository.findById(userId);
         String accessToken = jwtUtil.getAccessToken(user);
 
         // 3일 뒤 만료라면
@@ -150,7 +124,7 @@ public class UserServiceImpl implements UserService {
             operations.set(key, refreshToken);
         }
 
-        return new JwtDTO(user.getAccountId(), accessToken, refreshToken);
+        return new JwtDTO(accessToken, refreshToken);
     }
 
     @Override
@@ -170,15 +144,16 @@ public class UserServiceImpl implements UserService {
         if (recentAuthNum != null) {
             userRepository.deleteAuthNumById(recentAuthNum.getId());
         }
-        // 메일 발송
-        String authNum = makeRandomNumber();
-        mailUtil.sendAuthCodeMail(user, authNum);
 
         // 인증번호 저장
+        String authNum = makeRandomNumber();
         UserAuthModel userAuthModel = new UserAuthModel();
         userAuthModel.setUserId(user.getId());
         userAuthModel.setAuthNum(authNum);
         userRepository.addAuthNum(userAuthModel);
+
+        // 메일 발송
+        mailUtil.sendAuthCodeMail(user, authNum);
 
         AuthCodeDTO authCodeDTO = new AuthCodeDTO();
         authCodeDTO.setAccountId(user.getAccountId());
@@ -219,9 +194,11 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteAuthNumById(recentAuthNum.getId());
         UserModel user = userRepository.findById(recentAuthNum.getUserId());
         String newPassword = makeNewPassword();
-        mailUtil.sendPasswordMail(user, newPassword);
+        // 비밀번호 저장
         user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         userRepository.updatePassword(user);
+        // 비밀번호 전송
+       mailUtil.sendPasswordMail(user, newPassword);
 
         return "비밀번호가 메일로 전송되었습니다.";
     }
@@ -237,19 +214,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO updateDepartment(UserRequestDTO request) {
         DecodedJWT userInfo = findUserInfoInToken();
-        Long id = Long.valueOf(userInfo.getAudience().get(0));
-        UserModel user = new UserModel();
-        user.setId(id);
-        try {
-            user.setDepartment(
-                Department.valueOf(request.getDepartment()).getValue() + request.getGrade());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("존재하지 않는 학과입니다.");
-        }
+        UserModel user = UserMapper.INSTANCE.toUserModel(request);
+        user.setId(Long.parseLong(userInfo.getAudience().get(0)));
 
         userRepository.updateDepartment(user);
 
-        return getUserResponse(userRepository.findById(id));
+        return getUserResponse(userRepository.findById(user.getId()));
     }
 
     @Override
@@ -279,6 +249,10 @@ public class UserServiceImpl implements UserService {
     private DecodedJWT findUserInfoInToken() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String token = request.getHeader("Authorization");
+
+        if (!jwtUtil.isValidForm(token)) {
+            throw new RuntimeException("토큰이 유효하지 않습니다.");
+        }
 
         return jwtUtil.getDecodedJWT(token.substring(7));
     }

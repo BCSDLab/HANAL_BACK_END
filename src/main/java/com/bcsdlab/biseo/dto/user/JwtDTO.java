@@ -10,8 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JwtDTO {
-
-    String userAccountId;
     String access;
     String refresh;
 }

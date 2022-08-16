@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +40,7 @@ public class UserController {
     @PostMapping("/logout")
     @Auth
     public ResponseEntity<String> logout() {
-        return new ResponseEntity<>(userService.logout(), HttpStatus.OK);
+        return new ResponseEntity<>(userService.logout(), HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/refresh")
@@ -68,13 +69,13 @@ public class UserController {
         return new ResponseEntity<>(userService.getMe(), HttpStatus.OK);
     }
 
-    @PostMapping("/me/department")
+    @PutMapping("/me/department")
     @Auth
     public ResponseEntity<UserResponseDTO> updateDepartment(@RequestBody @Validated(ValidationGroups.ChangeDepartment.class) UserRequestDTO request) {
         return new ResponseEntity<>(userService.updateDepartment(request), HttpStatus.OK);
     }
 
-    @PostMapping("me/password")
+    @PutMapping("me/password")
     @Auth
     public ResponseEntity<String> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
         return new ResponseEntity<>(userService.updatePassword(passwordDTO), HttpStatus.OK);
