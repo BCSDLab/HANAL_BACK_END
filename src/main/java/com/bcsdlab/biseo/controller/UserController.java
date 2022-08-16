@@ -75,7 +75,7 @@ public class UserController {
         return new ResponseEntity<>(userService.updateDepartment(request), HttpStatus.OK);
     }
 
-    @PutMapping("me/password")
+    @PutMapping("/me/password")
     @Auth
     public ResponseEntity<String> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
         return new ResponseEntity<>(userService.updatePassword(passwordDTO), HttpStatus.OK);
