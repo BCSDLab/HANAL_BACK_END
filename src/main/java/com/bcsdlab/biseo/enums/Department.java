@@ -16,7 +16,8 @@ public enum Department {
     응용화학공학과(6000),
     에너지신소재공학과(6100),
     산업경영학부(7000),
-    고용서비스정책학과(8000);
+    고용서비스정책학과(8000),
+    전체(9000);
 
     private final int value;
     private static final Map<Integer, String> department = Collections.unmodifiableMap(
