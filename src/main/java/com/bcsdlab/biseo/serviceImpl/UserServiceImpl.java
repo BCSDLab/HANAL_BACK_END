@@ -19,15 +19,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Random;
-import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 @Transactional
@@ -91,7 +88,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String logout() {
-        DecodedJWT decodedJWT = findUserInfoInToken();
+        DecodedJWT decodedJWT = jwtUtil.findUserInfoInToken();
 
         String key = String.format("user:%s:refresh", decodedJWT.getAudience().get(0));
         stringRedisTemplate.delete(key);
@@ -205,7 +202,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDTO getMe() {
-        DecodedJWT userInfo = findUserInfoInToken();
+        DecodedJWT userInfo = jwtUtil.findUserInfoInToken();
         Long id = Long.valueOf(userInfo.getAudience().get(0));
 
         return getUserResponse(userRepository.findById(id));
@@ -213,7 +210,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDTO updateDepartment(UserRequestDTO request) {
-        DecodedJWT userInfo = findUserInfoInToken();
+        DecodedJWT userInfo = jwtUtil.findUserInfoInToken();
         UserModel user = UserMapper.INSTANCE.toUserModel(request);
         user.setId(Long.parseLong(userInfo.getAudience().get(0)));
 
@@ -224,7 +221,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String updatePassword(UserPasswordDTO passwordDTO) {
-        DecodedJWT decodedJWT = findUserInfoInToken();
+        DecodedJWT decodedJWT = jwtUtil.findUserInfoInToken();
         UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
 
         if (!BCrypt.checkpw(passwordDTO.getPassword(), user.getPassword())) {
@@ -244,17 +241,6 @@ public class UserServiceImpl implements UserService {
         response.setGrade(me.getDepartment() % 10);
         response.setDepartment(Department.getDepartment(me.getDepartment() / 10 * 10));
         return response;
-    }
-
-    private DecodedJWT findUserInfoInToken() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader("Authorization");
-
-        if (!jwtUtil.isValidForm(token)) {
-            throw new RuntimeException("토큰이 유효하지 않습니다.");
-        }
-
-        return jwtUtil.getDecodedJWT(token.substring(7));
     }
 
     private String makeRandomNumber() {

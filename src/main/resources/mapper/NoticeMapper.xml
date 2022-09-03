@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bcsdlab.biseo.repository.NoticeRepository">
+    <insert id="createNotice" parameterType="NoticeModel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Notice(user_id, title, content)
+        VALUES (#{userId}, #{title}, #{content});
+    </insert>
+
+    <insert id="createTarget" parameterType="NoticeTargetModel" useGeneratedKeys="true">
+        INSERT INTO Notice_Target(notice_id, target) VALUES (#{noticeId}, #{target})
+    </insert>
+</mapper>

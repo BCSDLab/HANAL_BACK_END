@@ -14,8 +14,11 @@ import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Component
 public class JwtUtil {
@@ -78,5 +81,16 @@ public class JwtUtil {
         } catch (JWTDecodeException e) {
             return null;
         }
+    }
+
+    public DecodedJWT findUserInfoInToken() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+
+        if (!isValidForm(token)) {
+            throw new RuntimeException("토큰이 유효하지 않습니다.");
+        }
+
+        return getDecodedJWT(token.substring(7));
     }
 }
