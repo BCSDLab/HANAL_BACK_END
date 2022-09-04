@@ -2,6 +2,7 @@ package com.bcsdlab.biseo.repository;
 
 import com.bcsdlab.biseo.dto.notice.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.notice.NoticeModel;
+import com.bcsdlab.biseo.dto.notice.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,4 +12,6 @@ public interface NoticeRepository {
     void createNotice(NoticeModel noticeModel);
     void createTarget(NoticeTargetModel targetModel);
     NoticeAndFileModel findByNoticeId(Long id);
+    NoticeReadModel findReadLogByUserId(Long noticeId, Long userId);
+    void createReadLog(NoticeReadModel noticeReadModel);
 }

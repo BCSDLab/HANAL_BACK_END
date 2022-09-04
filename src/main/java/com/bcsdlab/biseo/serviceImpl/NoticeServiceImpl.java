@@ -3,6 +3,7 @@ package com.bcsdlab.biseo.serviceImpl;
 import com.bcsdlab.biseo.dto.notice.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.notice.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.NoticeModel;
+import com.bcsdlab.biseo.dto.notice.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
@@ -64,17 +65,30 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeId < 1) {
             throw new RuntimeException("잘못된 입력입니다.");
         }
+        // 공지 조회
         NoticeAndFileModel noticeAndFile = noticeRepository.findByNoticeId(noticeId);
         if (noticeAndFile == null) {
             throw new RuntimeException("존재하지 않는 공지입니다.");
         }
         NoticeResponseDTO response =  NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
+
+        // File, Img 구분
         for (NoticeFileModel file : noticeAndFile.getFiles()) {
             if (file.getType() == FileType.FILE) {
                 response.getFiles().add(file.getPath());
             } else if (file.getType() == FileType.IMG) {
                 response.getImgs().add(file.getPath());
             }
+        }
+
+        // 읽은 유저 읽음처리
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        if (noticeRepository.findReadLogByUserId(noticeId, userId) == null) {
+            NoticeReadModel noticeReadModel = NoticeReadModel.builder()
+                .userId(userId)
+                .noticeId(noticeId)
+                .build();
+            noticeRepository.createReadLog(noticeReadModel);
         }
         return response;
     }

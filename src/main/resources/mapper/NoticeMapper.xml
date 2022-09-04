@@ -42,4 +42,17 @@
         WHERE
             n.id = #{noticeId};
     </select>
+    
+    <select id="findReadLogByUserId" resultType="NoticeReadModel">
+        SELECT
+            *
+        FROM
+            Notice_Read
+        WHERE
+            user_id = #{userId} AND notice_id = #{noticeId};
+    </select>
+
+    <insert id="createReadLog" parameterType="NoticeReadModel">
+        INSERT INTO Notice_Read(notice_id, user_id) VALUES (#{noticeId}, #{userId});
+    </insert>
 </mapper>
