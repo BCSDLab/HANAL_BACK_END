@@ -1,9 +1,12 @@
 package com.bcsdlab.biseo.serviceImpl;
 
+import com.bcsdlab.biseo.dto.notice.NoticeAndFileModel;
+import com.bcsdlab.biseo.dto.notice.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
+import com.bcsdlab.biseo.enums.FileType;
 import com.bcsdlab.biseo.mapper.NoticeMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
 import com.bcsdlab.biseo.service.NoticeService;
@@ -54,5 +57,25 @@ public class NoticeServiceImpl implements NoticeService {
         // notice target에 푸시 알림
 
         return notice.getId();
+    }
+
+    @Override
+    public NoticeResponseDTO getNotice(Long noticeId) {
+        if (noticeId < 1) {
+            throw new RuntimeException("잘못된 입력입니다.");
+        }
+        NoticeAndFileModel noticeAndFile = noticeRepository.findByNoticeId(noticeId);
+        if (noticeAndFile == null) {
+            throw new RuntimeException("존재하지 않는 공지입니다.");
+        }
+        NoticeResponseDTO response =  NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
+        for (NoticeFileModel file : noticeAndFile.getFiles()) {
+            if (file.getType() == FileType.FILE) {
+                response.getFiles().add(file.getPath());
+            } else if (file.getType() == FileType.IMG) {
+                response.getImgs().add(file.getPath());
+            }
+        }
+        return response;
     }
 }

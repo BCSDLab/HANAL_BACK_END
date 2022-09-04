@@ -14,19 +14,20 @@ import lombok.Setter;
 @AllArgsConstructor
 public class NoticeResponseDTO {
 
-    public Long id;
-    public String title;
-    public String content;
-    public Timestamp createdAt;
-    public Timestamp updatedAt;
-    public List<String> files = new ArrayList<>();
-    public List<String> pictures = new ArrayList<>();
+    private Long id;
+    private String userId;
+    private String title;
+    private String content;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+    private List<String> files = new ArrayList<>();
+    private List<String> imgs = new ArrayList<>();
 
     public void addFile(String file) {
         files.add(file);
     }
 
-    public void addPicture(String picture) {
-        pictures.add(picture);
+    public void addImgs(String img) {
+        imgs.add(img);
     }
 }

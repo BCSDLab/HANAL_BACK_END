@@ -9,4 +9,37 @@
     <insert id="createTarget" parameterType="NoticeTargetModel" useGeneratedKeys="true">
         INSERT INTO Notice_Target(notice_id, target) VALUES (#{noticeId}, #{target})
     </insert>
+
+    <resultMap id="noticeFileMap" type="NoticeFileModel">
+        <result property="path" column="path"/>
+        <result property="type" column="type"/>
+    </resultMap>
+
+    <resultMap id="noticeAndFileMap" type="NoticeAndFileModel">
+        <id property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <collection property="files" resultMap="noticeFileMap"/>
+    </resultMap>
+
+    <select id="findByNoticeId" resultMap="noticeAndFileMap">
+        SELECT
+            n.id,
+            (SELECT name FROM USER WHERE id = n.user_id) AS userId,
+            n.title,
+            n.content,
+            n.created_at,
+            n.updated_at,
+            f.path,
+            f.type
+        FROM
+            Notice n LEFT JOIN Notice_File f
+        ON
+            n.id = f.notice_id
+        WHERE
+            n.id = #{noticeId};
+    </select>
 </mapper>

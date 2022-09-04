@@ -8,4 +8,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface NoticeService {
 
     Long createNotice(NoticeRequestDTO request, List<MultipartFile> files);
+    NoticeResponseDTO getNotice(Long noticeId);
 }
