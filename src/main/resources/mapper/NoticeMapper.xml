@@ -55,4 +55,24 @@
     <insert id="createReadLog" parameterType="NoticeReadModel">
         INSERT INTO Notice_Read(notice_id, user_id) VALUES (#{noticeId}, #{userId});
     </insert>
+
+    <select id="findReadLogByNoticeId" resultType="UserModel">
+        SELECT
+            id, name, department
+        FROM
+            User
+        WHERE
+            id IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId})
+    </select>
+
+    <select id="findNotReadLogByNoticeId" resultType="UserModel">
+        SELECT
+            id, name, department
+        FROM
+            User
+        WHERE
+            department NOT IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId})
+                AND
+            id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId});
+    </select>
 </mapper>

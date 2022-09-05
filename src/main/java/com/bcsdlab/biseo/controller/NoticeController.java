@@ -3,6 +3,7 @@ package com.bcsdlab.biseo.controller;
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
+import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.service.NoticeService;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/notice")
 @RequiredArgsConstructor
 public class NoticeController {
+
     private final NoticeService noticeService;
 
     @PostMapping
@@ -34,5 +37,11 @@ public class NoticeController {
     @Auth
     public ResponseEntity<NoticeResponseDTO> getNotice(@PathVariable("noticeId") Long noticeId) {
         return new ResponseEntity<>(noticeService.getNotice(noticeId), HttpStatus.OK);
+    }
+
+    @GetMapping("/{noticeId}/read-list")
+    public ResponseEntity<List<UserResponseDTO>> getReadLog(@PathVariable("noticeId") Long noticeId,
+        @RequestParam("isRead") Boolean isRead) {
+        return new ResponseEntity<>(noticeService.getReadLog(noticeId, isRead), HttpStatus.OK);
     }
 }

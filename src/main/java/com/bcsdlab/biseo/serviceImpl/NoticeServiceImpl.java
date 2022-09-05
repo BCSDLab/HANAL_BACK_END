@@ -7,8 +7,12 @@ import com.bcsdlab.biseo.dto.notice.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
+import com.bcsdlab.biseo.dto.user.UserModel;
+import com.bcsdlab.biseo.dto.user.UserResponseDTO;
+import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.FileType;
 import com.bcsdlab.biseo.mapper.NoticeMapper;
+import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
 import com.bcsdlab.biseo.service.NoticeService;
 import com.bcsdlab.biseo.util.JwtUtil;
@@ -23,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {
+
     private final NoticeRepository noticeRepository;
     private final JwtUtil jwtUtil;
 
@@ -41,13 +46,13 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice target 학과/학년 저장
         List<Integer> targets = new ArrayList<>();
-        for(Integer grade : request.getGrade()) {
+        for (Integer grade : request.getGrade()) {
             targets.add(request.getDepartment().getValue() + grade);
         }
 
         NoticeTargetModel targetModel = new NoticeTargetModel();
         targetModel.setNoticeId(notice.getId());
-        for(Integer target : targets) {
+        for (Integer target : targets) {
             targetModel.setTarget(target);
             noticeRepository.createTarget(targetModel);
         }
@@ -63,14 +68,14 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public NoticeResponseDTO getNotice(Long noticeId) {
         if (noticeId < 1) {
-            throw new RuntimeException("잘못된 입력입니다.");
+            throw new RuntimeException("잘못된 접근입니다.");
         }
         // 공지 조회
         NoticeAndFileModel noticeAndFile = noticeRepository.findByNoticeId(noticeId);
         if (noticeAndFile == null) {
             throw new RuntimeException("존재하지 않는 공지입니다.");
         }
-        NoticeResponseDTO response =  NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
+        NoticeResponseDTO response = NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
 
         // File, Img 구분
         for (NoticeFileModel file : noticeAndFile.getFiles()) {
@@ -91,5 +96,26 @@ public class NoticeServiceImpl implements NoticeService {
             noticeRepository.createReadLog(noticeReadModel);
         }
         return response;
+    }
+
+    @Override
+    public List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead) {
+        if (noticeId < 1 || isRead == null) {
+            throw new RuntimeException("잘못된 접근입니다.");
+        }
+        List<UserModel> userList = isRead ? noticeRepository.findReadLogByNoticeId(noticeId)
+            : noticeRepository.findNotReadLogByNoticeId(noticeId);
+        if (userList == null) {
+            throw new RuntimeException("존재하지 않는 포스트입니다.");
+        }
+
+        List<UserResponseDTO> responses = new ArrayList<>();
+        for (UserModel model : userList) {
+            UserResponseDTO response = UserMapper.INSTANCE.toUserResponse(model);
+            response.setGrade(model.getDepartment() % 10);
+            response.setDepartment(Department.getDepartment(model.getDepartment() / 10 * 10));
+            responses.add(response);
+        }
+        return responses;
     }
 }
