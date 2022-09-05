@@ -18,4 +18,5 @@ public interface NoticeRepository {
     void createReadLog(NoticeReadModel noticeReadModel);
     List<UserModel> findReadLogByNoticeId(Long noticeId);
     List<UserModel> findNotReadLogByNoticeId(Long noticeId);
+    List<Integer> findTargetByNoticeId(Long noticeId);
 }

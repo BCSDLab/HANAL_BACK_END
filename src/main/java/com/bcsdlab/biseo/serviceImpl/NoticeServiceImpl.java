@@ -14,6 +14,7 @@ import com.bcsdlab.biseo.enums.FileType;
 import com.bcsdlab.biseo.mapper.NoticeMapper;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
+import com.bcsdlab.biseo.repository.UserRepository;
 import com.bcsdlab.biseo.service.NoticeService;
 import com.bcsdlab.biseo.util.JwtUtil;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class NoticeServiceImpl implements NoticeService {
 
     private final NoticeRepository noticeRepository;
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -70,6 +72,14 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeId < 1) {
             throw new RuntimeException("잘못된 접근입니다.");
         }
+        // 조회 가능한 학과인가?
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        Integer userDepartment = userRepository.findUserDepartmentById(userId);
+        List<Integer> noticeTarget = noticeRepository.findTargetByNoticeId(noticeId);
+        if (!noticeTarget.contains(userDepartment)) {
+            throw new RuntimeException("읽을 권한이 없습니다.");
+        }
+
         // 공지 조회
         NoticeAndFileModel noticeAndFile = noticeRepository.findByNoticeId(noticeId);
         if (noticeAndFile == null) {
@@ -87,7 +97,6 @@ public class NoticeServiceImpl implements NoticeService {
         }
 
         // 읽은 유저 읽음처리
-        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         if (noticeRepository.findReadLogByUserId(noticeId, userId) == null) {
             NoticeReadModel noticeReadModel = NoticeReadModel.builder()
                 .userId(userId)

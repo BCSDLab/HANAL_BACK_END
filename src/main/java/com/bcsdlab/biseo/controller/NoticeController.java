@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -40,8 +41,14 @@ public class NoticeController {
     }
 
     @GetMapping("/{noticeId}/read-list")
+    @Auth(type = UserType.COUNCIL)
     public ResponseEntity<List<UserResponseDTO>> getReadLog(@PathVariable("noticeId") Long noticeId,
         @RequestParam("isRead") Boolean isRead) {
         return new ResponseEntity<>(noticeService.getReadLog(noticeId, isRead), HttpStatus.OK);
+    }
+
+    @PutMapping("/{noticeId}")
+    public ResponseEntity<Long> updateNotice(@RequestPart NoticeRequestDTO request, @RequestPart List<MultipartFile> files) {
+
     }
 }

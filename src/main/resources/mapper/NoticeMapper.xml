@@ -75,4 +75,8 @@
                 AND
             id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId});
     </select>
+
+    <select id="findTargetByNoticeId" resultType="Integer">
+        SELECT target from Notice_Target WHERE notice_id = #{noticeId};
+    </select>
 </mapper>

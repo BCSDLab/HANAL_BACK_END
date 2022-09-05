@@ -16,5 +16,6 @@ public interface UserRepository {
     void setUserAuth(Long id);
     void updateDepartment(UserModel user);
     void updatePassword(UserModel user);
+    Integer findUserDepartmentById(Long id);
 
 }
