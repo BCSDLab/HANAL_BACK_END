@@ -11,4 +11,6 @@ public interface NoticeService {
     Long createNotice(NoticeRequestDTO request, List<MultipartFile> files);
     NoticeResponseDTO getNotice(Long noticeId);
     List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead);
+
+    Long updateNotice(Long noticeId, NoticeRequestDTO request, List<MultipartFile> files);
 }

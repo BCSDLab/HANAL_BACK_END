@@ -12,11 +12,15 @@ import org.apache.ibatis.annotations.Mapper;
 public interface NoticeRepository {
 
     void createNotice(NoticeModel noticeModel);
-    void createTarget(NoticeTargetModel targetModel);
-    NoticeAndFileModel findByNoticeId(Long id);
+    void createTarget(List<NoticeTargetModel> targetModel);
+    NoticeAndFileModel findNoticeAndFileById(Long id);
     NoticeReadModel findReadLogByUserId(Long noticeId, Long userId);
     void createReadLog(NoticeReadModel noticeReadModel);
     List<UserModel> findReadLogByNoticeId(Long noticeId);
     List<UserModel> findNotReadLogByNoticeId(Long noticeId);
     List<Integer> findTargetByNoticeId(Long noticeId);
+    NoticeModel findNoticeById(Long noticeId);
+    void updateNotice(NoticeModel notice);
+    void deleteTarget(Long noticeId);
+    void deleteReadList(Long noticeId);
 }

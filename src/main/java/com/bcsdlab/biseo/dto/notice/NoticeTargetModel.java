@@ -16,4 +16,9 @@ public class NoticeTargetModel {
     private int target;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+
+    public NoticeTargetModel(Long noticeId, int target) {
+        this.noticeId = noticeId;
+        this.target = target;
+    }
 }

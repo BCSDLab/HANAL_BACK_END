@@ -6,8 +6,13 @@
         VALUES (#{userId}, #{title}, #{content});
     </insert>
 
-    <insert id="createTarget" parameterType="NoticeTargetModel" useGeneratedKeys="true">
-        INSERT INTO Notice_Target(notice_id, target) VALUES (#{noticeId}, #{target})
+    <insert id="createTarget" parameterType="NoticeTargetModel">
+        INSERT INTO
+            Notice_Target(notice_id, target)
+        VALUES
+            <foreach collection="list" item="model" separator=",">
+                (#{model.noticeId}, #{model.target})
+            </foreach>
     </insert>
 
     <resultMap id="noticeFileMap" type="NoticeFileModel">
@@ -25,7 +30,7 @@
         <collection property="files" resultMap="noticeFileMap"/>
     </resultMap>
 
-    <select id="findByNoticeId" resultMap="noticeAndFileMap">
+    <select id="findNoticeAndFileById" resultMap="noticeAndFileMap">
         SELECT
             n.id,
             (SELECT name FROM USER WHERE id = n.user_id) AS userId,
@@ -40,7 +45,7 @@
         ON
             n.id = f.notice_id
         WHERE
-            n.id = #{noticeId};
+            n.id = #{noticeId} AND n.is_deleted = 0;
     </select>
     
     <select id="findReadLogByUserId" resultType="NoticeReadModel">
@@ -49,7 +54,7 @@
         FROM
             Notice_Read
         WHERE
-            user_id = #{userId} AND notice_id = #{noticeId};
+            user_id = #{userId} AND notice_id = #{noticeId} AND is_deleted = 0;
     </select>
 
     <insert id="createReadLog" parameterType="NoticeReadModel">
@@ -62,7 +67,7 @@
         FROM
             User
         WHERE
-            id IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId})
+            id IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId} AND is_deleted = 0)
     </select>
 
     <select id="findNotReadLogByNoticeId" resultType="UserModel">
@@ -71,12 +76,49 @@
         FROM
             User
         WHERE
-            department NOT IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId})
+            department NOT IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0)
                 AND
-            id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId});
+            id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId} AND is_deleted = 0);
     </select>
 
     <select id="findTargetByNoticeId" resultType="Integer">
-        SELECT target from Notice_Target WHERE notice_id = #{noticeId};
+        SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0;
     </select>
+
+    <select id="findNoticeById" resultType="NoticeModel">
+        SELECT
+             id, user_id, title, content
+        FROM
+            Notice
+        WHERE
+            id = #{noticeId} AND is_deleted = 0;
+    </select>
+
+    <update id="updateNotice" parameterType="NoticeModel">
+        UPDATE
+            Notice
+        SET
+            title = #{title},
+            content = #{content}
+        WHERE
+            id = #{id};
+    </update>
+
+    <update id="deleteTarget">
+        UPDATE
+            Notice_Target
+        SET
+            is_deleted = true
+        WHERE
+            notice_id = #{noticeId}
+    </update>
+
+    <update id="deleteReadList">
+        UPDATE
+            Notice_Read
+        SET
+            is_deleted = true
+        WHERE
+            notice_id = #{noticeId}
+    </update>
 </mapper>

@@ -47,18 +47,11 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.createNotice(notice);
 
         // notice target 학과/학년 저장
-        List<Integer> targets = new ArrayList<>();
+        List<NoticeTargetModel> targetList = new ArrayList<>();
         for (Integer grade : request.getGrade()) {
-            targets.add(request.getDepartment().getValue() + grade);
+            targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
         }
-
-        NoticeTargetModel targetModel = new NoticeTargetModel();
-        targetModel.setNoticeId(notice.getId());
-        for (Integer target : targets) {
-            targetModel.setTarget(target);
-            noticeRepository.createTarget(targetModel);
-        }
-
+        noticeRepository.createTarget(targetList);
         // notice File 저장
         // TODO : S3 파일저장 로직.
 
@@ -81,7 +74,7 @@ public class NoticeServiceImpl implements NoticeService {
         }
 
         // 공지 조회
-        NoticeAndFileModel noticeAndFile = noticeRepository.findByNoticeId(noticeId);
+        NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId);
         if (noticeAndFile == null) {
             throw new RuntimeException("존재하지 않는 공지입니다.");
         }
@@ -112,11 +105,12 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeId < 1 || isRead == null) {
             throw new RuntimeException("잘못된 접근입니다.");
         }
+        NoticeModel notice = noticeRepository.findNoticeById(noticeId);
+        if (notice == null) {
+            throw new RuntimeException("존재하지 않는 공지입니다.");
+        }
         List<UserModel> userList = isRead ? noticeRepository.findReadLogByNoticeId(noticeId)
             : noticeRepository.findNotReadLogByNoticeId(noticeId);
-        if (userList == null) {
-            throw new RuntimeException("존재하지 않는 포스트입니다.");
-        }
 
         List<UserResponseDTO> responses = new ArrayList<>();
         for (UserModel model : userList) {
@@ -126,5 +120,47 @@ public class NoticeServiceImpl implements NoticeService {
             responses.add(response);
         }
         return responses;
+    }
+
+    // 수정시
+    // 해당 과/학년 전체 재공지 필요
+    // 파일 : 다 지우고 다시 업로드?
+    @Override
+    public Long updateNotice(Long noticeId, NoticeRequestDTO request, List<MultipartFile> files) {
+        // 공지가 존재하지 않는다면
+        NoticeModel notice = noticeRepository.findNoticeById(noticeId);
+        if (notice == null) {
+            throw new RuntimeException("존재하지 않는 공지입니다.");
+        }
+
+        // 작성자가 아니라면
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        if (!notice.getUserId().equals(userId)) {
+            throw new RuntimeException("수정 권한이 없습니다.");
+        }
+
+        // 전부 다시 업로드
+        // 게시글 : Update
+        notice.setTitle(request.getTitle());
+        notice.setContent(request.getContent());
+        noticeRepository.updateNotice(notice);
+
+        // 타겟 : 삭제 후 재생성
+        noticeRepository.deleteTarget(noticeId);
+        List<NoticeTargetModel> targetList = new ArrayList<>();
+        for (Integer grade : request.getGrade()) {
+            targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
+        }
+        noticeRepository.createTarget(targetList);
+
+        // 읽은 유저 : 전체 삭제
+        noticeRepository.deleteReadList(noticeId);
+
+        // notice File 저장
+        // TODO : S3 파일저장 로직.
+
+        // notice target에 푸시 알림
+
+        return notice.getId();
     }
 }

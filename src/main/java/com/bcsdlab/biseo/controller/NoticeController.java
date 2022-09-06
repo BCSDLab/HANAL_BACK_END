@@ -48,7 +48,7 @@ public class NoticeController {
     }
 
     @PutMapping("/{noticeId}")
-    public ResponseEntity<Long> updateNotice(@RequestPart NoticeRequestDTO request, @RequestPart List<MultipartFile> files) {
-
+    public ResponseEntity<Long> updateNotice(@PathVariable("noticeId") Long noticeId, @RequestPart NoticeRequestDTO request, @RequestPart List<MultipartFile> files) {
+        return new ResponseEntity<>(noticeService.updateNotice(noticeId, request, files), HttpStatus.OK);
     }
 }
