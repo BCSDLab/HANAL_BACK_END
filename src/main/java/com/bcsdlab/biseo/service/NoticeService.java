@@ -13,4 +13,6 @@ public interface NoticeService {
     List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead);
 
     Long updateNotice(Long noticeId, NoticeRequestDTO request, List<MultipartFile> files);
+
+    String deleteNotice(Long noticeId);
 }

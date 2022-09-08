@@ -65,6 +65,13 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeId < 1) {
             throw new RuntimeException("잘못된 접근입니다.");
         }
+
+        // 공지 조회
+        NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId);
+        if (noticeAndFile == null) {
+            throw new RuntimeException("존재하지 않는 공지입니다.");
+        }
+
         // 조회 가능한 학과인가?
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
@@ -73,11 +80,6 @@ public class NoticeServiceImpl implements NoticeService {
             throw new RuntimeException("읽을 권한이 없습니다.");
         }
 
-        // 공지 조회
-        NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId);
-        if (noticeAndFile == null) {
-            throw new RuntimeException("존재하지 않는 공지입니다.");
-        }
         NoticeResponseDTO response = NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
 
         // File, Img 구분
@@ -143,10 +145,10 @@ public class NoticeServiceImpl implements NoticeService {
         // 게시글 : Update
         notice.setTitle(request.getTitle());
         notice.setContent(request.getContent());
-        noticeRepository.updateNotice(notice);
+        noticeRepository.updateNoticeById(notice);
 
         // 타겟 : 삭제 후 재생성
-        noticeRepository.deleteTarget(noticeId);
+        noticeRepository.deleteTargetByNoticeId(noticeId);
         List<NoticeTargetModel> targetList = new ArrayList<>();
         for (Integer grade : request.getGrade()) {
             targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
@@ -154,7 +156,7 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.createTarget(targetList);
 
         // 읽은 유저 : 전체 삭제
-        noticeRepository.deleteReadList(noticeId);
+        noticeRepository.deleteReadListByNoticeId(noticeId);
 
         // notice File 저장
         // TODO : S3 파일저장 로직.
@@ -162,5 +164,27 @@ public class NoticeServiceImpl implements NoticeService {
         // notice target에 푸시 알림
 
         return notice.getId();
+    }
+
+    @Override
+    public String deleteNotice(Long noticeId) {
+        NoticeModel notice = noticeRepository.findNoticeById(noticeId);
+        if (notice == null) {
+            throw new RuntimeException("존재하지 않는 공지입니다.");
+        }
+
+        // 작성자가 아니라면
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        if (!notice.getUserId().equals(userId)) {
+            throw new RuntimeException("삭제 권한이 없습니다.");
+        }
+
+        noticeRepository.deleteNoticeById(noticeId);
+        noticeRepository.deleteTargetByNoticeId(noticeId);
+        noticeRepository.deleteReadListByNoticeId(noticeId);
+        // 파일 삭제
+        // TODO : S3 파일 삭제 로직
+
+        return "게시글 삭제 완료";
     }
 }

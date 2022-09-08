@@ -94,7 +94,7 @@
             id = #{noticeId} AND is_deleted = 0;
     </select>
 
-    <update id="updateNotice" parameterType="NoticeModel">
+    <update id="updateNoticeById" parameterType="NoticeModel">
         UPDATE
             Notice
         SET
@@ -104,21 +104,30 @@
             id = #{id};
     </update>
 
-    <update id="deleteTarget">
+    <update id="deleteTargetByNoticeId">
         UPDATE
             Notice_Target
         SET
-            is_deleted = true
+            is_deleted = 1
         WHERE
             notice_id = #{noticeId}
     </update>
 
-    <update id="deleteReadList">
+    <update id="deleteReadListByNoticeId">
         UPDATE
             Notice_Read
         SET
-            is_deleted = true
+            is_deleted = 1
         WHERE
             notice_id = #{noticeId}
+    </update>
+
+    <update id="deleteNoticeById">
+        UPDATE
+            Notice
+        SET
+            is_deleted = 1
+        WHERE
+            id = #{noticeId};
     </update>
 </mapper>

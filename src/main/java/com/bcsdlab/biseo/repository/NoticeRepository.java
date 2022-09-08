@@ -20,7 +20,9 @@ public interface NoticeRepository {
     List<UserModel> findNotReadLogByNoticeId(Long noticeId);
     List<Integer> findTargetByNoticeId(Long noticeId);
     NoticeModel findNoticeById(Long noticeId);
-    void updateNotice(NoticeModel notice);
-    void deleteTarget(Long noticeId);
-    void deleteReadList(Long noticeId);
+    void updateNoticeById(NoticeModel notice);
+    void deleteTargetByNoticeId(Long noticeId);
+    void deleteReadListByNoticeId(Long noticeId);
+
+    void deleteNoticeById(Long noticeId);
 }

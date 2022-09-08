@@ -10,6 +10,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +49,14 @@ public class NoticeController {
     }
 
     @PutMapping("/{noticeId}")
+    @Auth(type = UserType.COUNCIL)
     public ResponseEntity<Long> updateNotice(@PathVariable("noticeId") Long noticeId, @RequestPart NoticeRequestDTO request, @RequestPart List<MultipartFile> files) {
         return new ResponseEntity<>(noticeService.updateNotice(noticeId, request, files), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{noticeId}")
+    @Auth(type = UserType.COUNCIL)
+    public ResponseEntity<String> deleteNotice(@PathVariable("noticeId") Long noticeId) {
+        return new ResponseEntity<>(noticeService.deleteNotice(noticeId), HttpStatus.OK);
     }
 }
