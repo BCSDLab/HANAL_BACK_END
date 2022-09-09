@@ -15,6 +15,7 @@ public class NoticeFileModel {
     private Long id;
     private Long noticeId;
     private String path;
+    private String savedName;
     private FileType type;
     private Timestamp createdAt;
     private Timestamp updatedAt;

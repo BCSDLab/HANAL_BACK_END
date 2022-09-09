@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS Notice_File (
     id          BIGINT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
     notice_id   BIGINT      NOT NULL,
     path        TEXT        NOT NULL,
+    saved_name  TEXT        NOT NULL,
     type        VARCHAR(10) NOT NULL,
     created_at  DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at  DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
