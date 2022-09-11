@@ -17,8 +17,11 @@ import com.bcsdlab.biseo.repository.NoticeRepository;
 import com.bcsdlab.biseo.repository.UserRepository;
 import com.bcsdlab.biseo.service.NoticeService;
 import com.bcsdlab.biseo.util.JwtUtil;
+import com.bcsdlab.biseo.util.S3Util;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final S3Util s3Util;
 
     @Override
     public Long createNotice(NoticeRequestDTO request, List<MultipartFile> files) {
@@ -52,10 +56,15 @@ public class NoticeServiceImpl implements NoticeService {
             targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
         }
         noticeRepository.createTarget(targetList);
-        // notice File 저장
-        // TODO : S3 파일저장 로직.
 
-        // notice target에 푸시 알림
+        // notice File 저장
+        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), files);
+        if (fileList.size() != 0) {
+            noticeRepository.createFiles(fileList);
+        }
+
+        // TODO : notice target에 푸시 알림
+
 
         return notice.getId();
     }
@@ -159,9 +168,13 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.deleteReadListByNoticeId(noticeId);
 
         // notice File 저장
-        // TODO : S3 파일저장 로직.
+        noticeRepository.deleteNoticeFileByNoticeId(noticeId);
+        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), files);
+        if (fileList.size() != 0) {
+            noticeRepository.createFiles(fileList);
+        }
 
-        // notice target에 푸시 알림
+        // TODO : notice target에 푸시 알림
 
         return notice.getId();
     }
@@ -182,9 +195,44 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.deleteNoticeById(noticeId);
         noticeRepository.deleteTargetByNoticeId(noticeId);
         noticeRepository.deleteReadListByNoticeId(noticeId);
-        // 파일 삭제
-        // TODO : S3 파일 삭제 로직
+        noticeRepository.deleteNoticeFileByNoticeId(noticeId);
 
         return "게시글 삭제 완료";
+    }
+
+    private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
+        List<NoticeFileModel> models = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            NoticeFileModel model = new NoticeFileModel();
+            UUID uuid = UUID.randomUUID();
+            String savedName = noticeId + "/" + uuid + "/" + file.getOriginalFilename();
+            model.setNoticeId(noticeId);
+            model.setSavedName(savedName);
+            model.setType(checkFileType(savedName));
+            try {
+                model.setPath(s3Util.uploadFile(savedName, file));
+            } catch (IOException e) {
+                throw new RuntimeException("파일 업로드 중 문제가 발생하였습니다.");
+            }
+            models.add(model);
+        }
+
+        return models;
+    }
+
+    private FileType checkFileType(String fileName) {
+        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+        if (extension.equals("jpg") ||
+            extension.equals("jpeg") ||
+            extension.equals("gif") ||
+            extension.equals("png") ||
+            extension.equals("bmp") ||
+            extension.equals("tif")
+        ) {
+            return FileType.IMG;
+        }
+        return FileType.FILE;
     }
 }

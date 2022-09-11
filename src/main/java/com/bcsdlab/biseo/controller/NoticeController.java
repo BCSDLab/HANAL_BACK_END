@@ -6,6 +6,7 @@ import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.user.UserResponseDTO;
 import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.service.NoticeService;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

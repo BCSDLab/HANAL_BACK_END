@@ -20,13 +20,13 @@ public class S3Util {
     private String bucket;
     private final AmazonS3 amazonS3;
 
-    public String uploadFile(String key, MultipartFile file) throws IOException {
+    public String uploadFile(String savedName, MultipartFile file) throws IOException {
         ObjectMetadata omd = new ObjectMetadata();
         omd.setContentType(file.getContentType());
         omd.setContentLength(file.getSize());
-        amazonS3.putObject(bucket, key, file.getInputStream(), omd);
+        amazonS3.putObject(bucket, savedName, file.getInputStream(), omd);
 
-        return amazonS3.getUrl(bucket, key).toString();
+        return amazonS3.getUrl(bucket, savedName).toString();
     }
 
     public void deleteFile(String savedName) {

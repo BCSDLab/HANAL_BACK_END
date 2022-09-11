@@ -18,4 +18,5 @@ public class NoticeReadModel {
     private Long noticeId;
     private Long userId;
     private Timestamp readAt;
+    private Boolean isDeleted;
 }

@@ -19,4 +19,5 @@ public class NoticeFileModel {
     private FileType type;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private Boolean isDeleted;
 }

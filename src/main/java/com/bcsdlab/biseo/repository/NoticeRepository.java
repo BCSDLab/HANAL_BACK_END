@@ -1,6 +1,7 @@
 package com.bcsdlab.biseo.repository;
 
 import com.bcsdlab.biseo.dto.notice.NoticeAndFileModel;
+import com.bcsdlab.biseo.dto.notice.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
@@ -25,4 +26,6 @@ public interface NoticeRepository {
     void deleteReadListByNoticeId(Long noticeId);
 
     void deleteNoticeById(Long noticeId);
+    void createFiles(List<NoticeFileModel> files);
+    void deleteNoticeFileByNoticeId(Long noticeId);
 }

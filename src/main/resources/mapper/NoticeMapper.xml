@@ -45,7 +45,7 @@
         ON
             n.id = f.notice_id
         WHERE
-            n.id = #{noticeId} AND n.is_deleted = 0;
+            n.id = #{noticeId} AND n.is_deleted = 0 AND f.is_deleted = 0;
     </select>
     
     <select id="findReadLogByUserId" resultType="NoticeReadModel">
@@ -129,5 +129,24 @@
             is_deleted = 1
         WHERE
             id = #{noticeId};
+    </update>
+
+    <insert id="createFiles" parameterType="NoticeFileModel">
+        INSERT INTO
+            Notice_File(notice_id, path, saved_name, type)
+        VALUES
+        <foreach collection="list" item="model" separator=",">
+            (#{model.noticeId}, #{model.path}, #{model.savedName}, #{model.type})
+        </foreach>
+        ;
+    </insert>
+
+    <update id="deleteNoticeFileByNoticeId">
+        UPDATE
+            Notice_File
+        SET
+            is_deleted = 1
+        WHERE
+            notice_id = #{noticeId}
     </update>
 </mapper>

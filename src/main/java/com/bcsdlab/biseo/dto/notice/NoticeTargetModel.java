@@ -16,6 +16,7 @@ public class NoticeTargetModel {
     private int target;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private Boolean isDeleted;
 
     public NoticeTargetModel(Long noticeId, int target) {
         this.noticeId = noticeId;
