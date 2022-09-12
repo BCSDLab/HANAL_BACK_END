@@ -17,4 +17,6 @@ public interface NoticeMapper {
 
     @Mapping(target = "files", ignore = true)
     NoticeResponseDTO toResponseDTO(NoticeAndFileModel model);
+
+    NoticeResponseDTO toResponseDTO2(NoticeModel model);
 }

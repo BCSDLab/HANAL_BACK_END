@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {
-
+    private static String extRegExp = "^([\\S\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp))$)";
     private final NoticeRepository noticeRepository;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
@@ -52,6 +53,8 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice target 학과/학년 저장
         List<NoticeTargetModel> targetList = new ArrayList<>();
+        // 학생회 : 0
+        targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue()));
         for (Integer grade : request.getGrade()) {
             targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
         }
@@ -111,6 +114,19 @@ public class NoticeServiceImpl implements NoticeService {
         return response;
     }
 
+
+    // 커서기반 페이지네이션
+    @Override
+    public List<NoticeResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        Integer userDepartment = userRepository.findUserDepartmentById(userId);
+        List<NoticeAndFileModel> noticeModelList = noticeRepository.getNoticeList(userDepartment, searchBy, cursor, limits);
+
+        return noticeModelList.stream()
+            .map(NoticeMapper.INSTANCE::toResponseDTO)
+            .collect(Collectors.toList());
+    }
+
     @Override
     public List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead) {
         if (noticeId < 1 || isRead == null) {
@@ -159,6 +175,8 @@ public class NoticeServiceImpl implements NoticeService {
         // 타겟 : 삭제 후 재생성
         noticeRepository.deleteTargetByNoticeId(noticeId);
         List<NoticeTargetModel> targetList = new ArrayList<>();
+        // 학생회 : 0
+        targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue()));
         for (Integer grade : request.getGrade()) {
             targetList.add(new NoticeTargetModel(notice.getId(), request.getDepartment().getValue() + grade));
         }
@@ -222,15 +240,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     private FileType checkFileType(String fileName) {
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-
-        if (extension.equals("jpg") ||
-            extension.equals("jpeg") ||
-            extension.equals("gif") ||
-            extension.equals("png") ||
-            extension.equals("bmp") ||
-            extension.equals("tif")
-        ) {
+        if (fileName.matches(extRegExp)) {
             return FileType.IMG;
         }
         return FileType.FILE;

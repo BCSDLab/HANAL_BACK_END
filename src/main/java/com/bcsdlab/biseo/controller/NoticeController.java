@@ -36,6 +36,16 @@ public class NoticeController {
         return new ResponseEntity<>(noticeService.createNotice(request, files), HttpStatus.OK);
     }
 
+    @GetMapping
+    @Auth
+    public ResponseEntity<List<NoticeResponseDTO>> getNoticeList(
+        @RequestParam(value = "searchBy", required = false) String searchBy,
+        @RequestParam(value = "cursor", required = false) Long cursor,
+        @RequestParam(value = "limits", required = false) Integer limits
+    ) {
+        return new ResponseEntity<>(noticeService.getNoticeList(searchBy, cursor, limits), HttpStatus.OK);
+    }
+
     @GetMapping("/{noticeId}")
     @Auth
     public ResponseEntity<NoticeResponseDTO> getNotice(@PathVariable("noticeId") Long noticeId) {

@@ -14,6 +14,7 @@ public interface NoticeRepository {
 
     void createNotice(NoticeModel noticeModel);
     void createTarget(List<NoticeTargetModel> targetModel);
+    List<NoticeAndFileModel> getNoticeList(Integer department, String searchBy, Long cursor, Integer limits);
     NoticeAndFileModel findNoticeAndFileById(Long id);
     NoticeReadModel findReadLogByUserId(Long noticeId, Long userId);
     void createReadLog(NoticeReadModel noticeReadModel);

@@ -149,4 +149,31 @@
         WHERE
             notice_id = #{noticeId}
     </update>
+
+    <select id="getNoticeList" resultType="NoticeAndFileModel">
+        SELECT
+            N.id, (SELECT name FROM USER WHERE id = N.user_id) AS userId, N.title, N.content, N.created_at, N.updated_at
+        FROM
+            Notice N LEFT JOIN Notice_Target NT on n.id = NT.notice_id
+        WHERE
+            NT.target = #{department} AND NT.is_deleted = 0
+          <if test="cursor neq null">
+              AND N.id <![CDATA[<]]> #{cursor}
+          </if>
+          <if test="searchBy neq null and searchBy neq ''.toString()">
+              AND N.title LIKE CONCAT('%',#{searchBy},'%')
+          </if>
+            AND N.is_deleted = 0
+        ORDER BY
+            N.id desc
+        LIMIT
+            <choose>
+                <when test="limits == null || limits lte 0">
+                    5;
+                </when>
+                <otherwise>
+                    #{limits};
+                </otherwise>
+            </choose>
+    </select>
 </mapper>
