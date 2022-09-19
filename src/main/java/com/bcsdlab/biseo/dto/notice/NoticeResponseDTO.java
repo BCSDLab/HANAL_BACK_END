@@ -13,13 +13,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class NoticeResponseDTO {
 
     private Long id;
     private String userId;
     private String title;
     private String content;
+    private String thumbnail;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private List<String> files = new ArrayList<>();

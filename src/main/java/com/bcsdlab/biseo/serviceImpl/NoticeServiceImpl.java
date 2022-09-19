@@ -120,11 +120,9 @@ public class NoticeServiceImpl implements NoticeService {
     public List<NoticeResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
-        List<NoticeAndFileModel> noticeModelList = noticeRepository.getNoticeList(userDepartment, searchBy, cursor, limits);
+        List<NoticeResponseDTO> noticeModelList = noticeRepository.getNoticeList(userDepartment, searchBy, cursor, limits);
 
-        return noticeModelList.stream()
-            .map(NoticeMapper.INSTANCE::toResponseDTO)
-            .collect(Collectors.toList());
+        return noticeModelList;
     }
 
     @Override

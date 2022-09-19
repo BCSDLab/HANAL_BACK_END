@@ -33,7 +33,7 @@
     <select id="findNoticeAndFileById" resultMap="noticeAndFileMap">
         SELECT
             n.id,
-            (SELECT name FROM USER WHERE id = n.user_id) AS userId,
+            u.name as userId,
             n.title,
             n.content,
             n.created_at,
@@ -41,9 +41,9 @@
             f.path,
             f.type
         FROM
-            Notice n LEFT JOIN Notice_File f
-        ON
-            n.id = f.notice_id
+            Notice n
+        LEFT JOIN Notice_File f ON n.id = f.notice_id
+        LEFT JOIN User u ON n.user_id = u.id
         WHERE
             n.id = #{noticeId} AND n.is_deleted = 0 AND f.is_deleted = 0;
     </select>
@@ -150,22 +150,30 @@
             notice_id = #{noticeId}
     </update>
 
-    <select id="getNoticeList" resultType="NoticeAndFileModel">
+    <select id="getNoticeList" resultType="NoticeResponseDTO">
         SELECT
-            N.id, (SELECT name FROM USER WHERE id = N.user_id) AS userId, N.title, N.content, N.created_at, N.updated_at
+            n.id,
+            u.name AS userId,
+            (select path from Notice_File where notice_id = n.id and type = 'IMG' limit 1) as thumbnail,
+            n.title,
+            n.content,
+            n.created_at,
+            n.updated_at
         FROM
-            Notice N LEFT JOIN Notice_Target NT on n.id = NT.notice_id
+            Notice n
+        LEFT JOIN Notice_Target nt on n.id = nt.notice_id
+        LEFT JOIN User u ON n.user_id = u.id
         WHERE
-            NT.target = #{department} AND NT.is_deleted = 0
+            nt.target = #{department} AND nt.is_deleted = 0
           <if test="cursor neq null">
-              AND N.id <![CDATA[<]]> #{cursor}
+              AND n.id <![CDATA[<]]> #{cursor}
           </if>
           <if test="searchBy neq null and searchBy neq ''.toString()">
-              AND N.title LIKE CONCAT('%',#{searchBy},'%')
+              AND n.title LIKE CONCAT('%',#{searchBy},'%')
           </if>
-            AND N.is_deleted = 0
+            AND n.is_deleted = 0
         ORDER BY
-            N.id desc
+            n.id desc
         LIMIT
             <choose>
                 <when test="limits == null || limits lte 0">
