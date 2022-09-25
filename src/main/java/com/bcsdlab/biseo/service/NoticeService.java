@@ -8,12 +8,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface NoticeService {
 
-    Long createNotice(NoticeRequestDTO request, List<MultipartFile> files);
+    Long createNotice(NoticeRequestDTO request, MultipartFile[] files);
     NoticeResponseDTO getNotice(Long noticeId);
     List<NoticeResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits);
     List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead);
 
-    Long updateNotice(Long noticeId, NoticeRequestDTO request, List<MultipartFile> files);
+    Long updateNotice(Long noticeId, NoticeRequestDTO request, MultipartFile[] files);
 
     String deleteNotice(Long noticeId);
 }

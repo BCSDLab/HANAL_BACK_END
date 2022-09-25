@@ -39,7 +39,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final S3Util s3Util;
 
     @Override
-    public Long createNotice(NoticeRequestDTO request, List<MultipartFile> files) {
+    public Long createNotice(NoticeRequestDTO request, MultipartFile[] files) {
         // 예외 처리
         if (request.getGrade().size() == 0) {
             throw new RuntimeException("학년을 선택해야 합니다.");
@@ -151,7 +151,7 @@ public class NoticeServiceImpl implements NoticeService {
     // 해당 과/학년 전체 재공지 필요
     // 파일 : 다 지우고 다시 업로드?
     @Override
-    public Long updateNotice(Long noticeId, NoticeRequestDTO request, List<MultipartFile> files) {
+    public Long updateNotice(Long noticeId, NoticeRequestDTO request, MultipartFile[] files) {
         // 공지가 존재하지 않는다면
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
@@ -216,7 +216,7 @@ public class NoticeServiceImpl implements NoticeService {
         return "게시글 삭제 완료";
     }
 
-    private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
+    private List<NoticeFileModel> uploadFiles(Long noticeId, MultipartFile[] files) {
         List<NoticeFileModel> models = new ArrayList<>();
 
         for (MultipartFile file : files) {

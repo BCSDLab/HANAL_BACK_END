@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
@@ -12,19 +13,17 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-@EnableSwagger2
+@EnableWebMvc
 public class SwaggerConfig {
 
     @Bean
     public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
-            .useDefaultResponseMessages(false)   // 기본적인 응답 메세지를 사용할 것인가
-            .consumes(getConsumeContentTypes())         // Request Content-type
-            .produces(getProduceContentTypes())         // Response Content-type
+        return new Docket(DocumentationType.OAS_30)
             .apiInfo(getApiInfo())                      // Api Info
+//            .consumes(getConsumeContentTypes())         // Request Content-type
+//            .produces(getProduceContentTypes())         // Response Content-type
             .select()                                   // ApiSelectBuilder 생성
             .apis(RequestHandlerSelectors.basePackage("com.bcsdlab.biseo.controller"))  // api 스펙이 작성될 패키지
             .paths(PathSelectors.any())                 // path 조건에 해당하는 api만 불러옴
@@ -36,7 +35,7 @@ public class SwaggerConfig {
         Set<String> consumes = new HashSet<>();
         consumes.add("application/json;charset=UTF-8");
         consumes.add("application/x-www-form-urlencoded");
-        consumes.add("multipart/from-data");
+        consumes.add("multipart/form-data");
         return consumes;
     }
 
