@@ -1,13 +1,15 @@
 package com.bcsdlab.biseo.serviceImpl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.bcsdlab.biseo.dto.user.AuthCodeDTO;
-import com.bcsdlab.biseo.dto.user.JwtDTO;
-import com.bcsdlab.biseo.dto.user.UserAuthModel;
-import com.bcsdlab.biseo.dto.user.UserModel;
-import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
-import com.bcsdlab.biseo.dto.user.UserRequestDTO;
-import com.bcsdlab.biseo.dto.user.UserResponseDTO;
+import com.bcsdlab.biseo.dto.user.request.UserAuthDTO;
+import com.bcsdlab.biseo.dto.user.request.JwtDTO;
+import com.bcsdlab.biseo.dto.user.model.UserAuthModel;
+import com.bcsdlab.biseo.dto.user.model.UserModel;
+import com.bcsdlab.biseo.dto.user.request.UserDepartmentDTO;
+import com.bcsdlab.biseo.dto.user.request.UserLoginDTO;
+import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
+import com.bcsdlab.biseo.dto.user.request.UserSignUpDTO;
+import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.UserRepository;
@@ -37,7 +39,7 @@ public class UserServiceImpl implements UserService {
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public UserResponseDTO signUp(UserRequestDTO request) {
+    public UserResponseDTO signUp(UserSignUpDTO request) {
         if (userRepository.findByAccountId(request.getAccountId()) != null) {
             throw new RuntimeException("존재하는 계정입니다.");
         }
@@ -51,7 +53,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtDTO login(UserRequestDTO request) {
+    public JwtDTO login(UserLoginDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
             throw new RuntimeException("존재하지 않는 아이디입니다.");
@@ -125,8 +127,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthCodeDTO sendAuthMail(UserRequestDTO request) {
-        UserModel user = userRepository.findByAccountId(request.getAccountId());
+    public UserAuthDTO sendAuthMail(String accountId) {
+        if (accountId == null || accountId.equals("")) {
+            throw new RuntimeException("유저가 존재하지 않습니다.");
+        }
+        UserModel user = userRepository.findByAccountId(accountId);
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
@@ -152,39 +157,39 @@ public class UserServiceImpl implements UserService {
         // 메일 발송
         mailUtil.sendAuthCodeMail(user, authNum);
 
-        AuthCodeDTO authCodeDTO = new AuthCodeDTO();
-        authCodeDTO.setAccountId(user.getAccountId());
-        return authCodeDTO;
+        UserAuthDTO userAuthDTO = new UserAuthDTO();
+        userAuthDTO.setAccountId(user.getAccountId());
+        return userAuthDTO;
     }
 
     @Override
-    public String certifySignUpMail(AuthCodeDTO authCodeDTO) {
+    public String certifySignUpMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            authCodeDTO.getAccountId());
+            userAuthDTO.getAccountId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (!authCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+        if (!userAuthDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
-        userRepository.setUserAuth(userRepository.findByAccountId(authCodeDTO.getAccountId()).getId());
+        userRepository.setUserAuth(userRepository.findByAccountId(userAuthDTO.getAccountId()).getId());
         return "인증이 완료되었습니다.";
     }
 
     @Override
-    public String certifyPasswordMail(AuthCodeDTO authCodeDTO) {
+    public String certifyPasswordMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            authCodeDTO.getAccountId());
+            userAuthDTO.getAccountId());
 
         if (recentAuthNum == null) {
             throw new RuntimeException("이메일 인증을 먼저 해주세요");
         }
 
-        if (!authCodeDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
+        if (!userAuthDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
             throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
         }
 
@@ -209,9 +214,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDTO updateDepartment(UserRequestDTO request) {
+    public UserResponseDTO updateDepartment(UserDepartmentDTO request) {
         DecodedJWT userInfo = jwtUtil.findUserInfoInToken();
-        UserModel user = UserMapper.INSTANCE.toUserModel(request);
+        UserModel user = UserMapper.INSTANCE.departmentDtotoUserModel(request);
         user.setId(Long.parseLong(userInfo.getAudience().get(0)));
 
         userRepository.updateDepartment(user);

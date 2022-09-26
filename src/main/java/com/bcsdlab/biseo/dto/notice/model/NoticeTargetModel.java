@@ -1,9 +1,6 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.model;
 
-import com.bcsdlab.biseo.dto.user.UserModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.sql.Timestamp;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,12 +10,16 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeModel {
+public class NoticeTargetModel {
     private Long id;
-    private Long userId;
-    private String title;
-    private String content;
+    private Long noticeId;
+    private int target;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Boolean isDeleted;
+
+    public NoticeTargetModel(Long noticeId, int target) {
+        this.noticeId = noticeId;
+        this.target = target;
+    }
 }

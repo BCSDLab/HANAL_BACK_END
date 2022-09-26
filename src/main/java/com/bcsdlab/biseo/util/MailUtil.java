@@ -1,6 +1,6 @@
 package com.bcsdlab.biseo.util;
 
-import com.bcsdlab.biseo.dto.user.UserModel;
+import com.bcsdlab.biseo.dto.user.model.UserModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

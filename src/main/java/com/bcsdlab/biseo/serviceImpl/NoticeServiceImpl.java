@@ -1,14 +1,14 @@
 package com.bcsdlab.biseo.serviceImpl;
 
-import com.bcsdlab.biseo.dto.notice.NoticeAndFileModel;
-import com.bcsdlab.biseo.dto.notice.NoticeFileModel;
-import com.bcsdlab.biseo.dto.notice.NoticeModel;
-import com.bcsdlab.biseo.dto.notice.NoticeReadModel;
+import com.bcsdlab.biseo.dto.notice.model.NoticeAndFileModel;
+import com.bcsdlab.biseo.dto.notice.model.NoticeFileModel;
+import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
+import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
-import com.bcsdlab.biseo.dto.notice.NoticeTargetModel;
-import com.bcsdlab.biseo.dto.user.UserModel;
-import com.bcsdlab.biseo.dto.user.UserResponseDTO;
+import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
+import com.bcsdlab.biseo.dto.user.model.UserModel;
+import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.FileType;
 import com.bcsdlab.biseo.mapper.NoticeMapper;
@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +38,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final S3Util s3Util;
 
     @Override
-    public Long createNotice(NoticeRequestDTO request, MultipartFile[] files) {
+    public Long createNotice(NoticeRequestDTO request) {
         // 예외 처리
         if (request.getGrade().size() == 0) {
             throw new RuntimeException("학년을 선택해야 합니다.");
@@ -61,7 +60,7 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.createTarget(targetList);
 
         // notice File 저장
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), files);
+        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
         if (fileList.size() != 0) {
             noticeRepository.createFiles(fileList);
         }
@@ -151,7 +150,7 @@ public class NoticeServiceImpl implements NoticeService {
     // 해당 과/학년 전체 재공지 필요
     // 파일 : 다 지우고 다시 업로드?
     @Override
-    public Long updateNotice(Long noticeId, NoticeRequestDTO request, MultipartFile[] files) {
+    public Long updateNotice(Long noticeId, NoticeRequestDTO request) {
         // 공지가 존재하지 않는다면
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
@@ -185,7 +184,7 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice File 저장
         noticeRepository.deleteNoticeFileByNoticeId(noticeId);
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), files);
+        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
         if (fileList.size() != 0) {
             noticeRepository.createFiles(fileList);
         }
@@ -216,7 +215,7 @@ public class NoticeServiceImpl implements NoticeService {
         return "게시글 삭제 완료";
     }
 
-    private List<NoticeFileModel> uploadFiles(Long noticeId, MultipartFile[] files) {
+    private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
         List<NoticeFileModel> models = new ArrayList<>();
 
         for (MultipartFile file : files) {

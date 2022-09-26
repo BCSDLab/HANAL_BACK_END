@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.user;
+package com.bcsdlab.biseo.dto.user.model;
 
 import com.bcsdlab.biseo.enums.UserType;
 import java.sql.Timestamp;

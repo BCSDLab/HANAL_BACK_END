@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.model;
 
 
 import java.sql.Timestamp;

@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.model;
 
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
@@ -10,16 +10,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeTargetModel {
+public class NoticeModel {
     private Long id;
-    private Long noticeId;
-    private int target;
+    private Long userId;
+    private String title;
+    private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Boolean isDeleted;
-
-    public NoticeTargetModel(Long noticeId, int target) {
-        this.noticeId = noticeId;
-        this.target = target;
-    }
 }

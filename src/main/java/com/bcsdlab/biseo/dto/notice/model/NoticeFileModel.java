@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.model;
 
 import com.bcsdlab.biseo.enums.FileType;
 import java.sql.Timestamp;

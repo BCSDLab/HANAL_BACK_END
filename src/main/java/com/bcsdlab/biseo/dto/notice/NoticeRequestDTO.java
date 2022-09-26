@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -16,12 +17,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NoticeRequestDTO {
-    @ApiModelProperty(value = "제목")
+    @ApiModelProperty(value = "제목", required = true)
     private String title;
-    @ApiModelProperty(value = "내용")
+    @ApiModelProperty(value = "내용", required = true)
     private String content;
-    @ApiModelProperty(value = "학과")
+    @ApiModelProperty(value = "학과", required = true)
     private Department department;
-    @ApiModelProperty(value = "학년")
+    @ApiModelProperty(value = "학년", required = true)
     private List<Integer> grade = new ArrayList<>();
+    @ApiModelProperty(value = "파일")
+    List<MultipartFile> files = new ArrayList<>();
 }
