@@ -2,14 +2,15 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
-import com.bcsdlab.biseo.dto.user.AuthCodeDTO;
-import com.bcsdlab.biseo.dto.user.JwtDTO;
-import com.bcsdlab.biseo.dto.user.UserPasswordDTO;
-import com.bcsdlab.biseo.dto.user.UserRequestDTO;
-import com.bcsdlab.biseo.dto.user.UserResponseDTO;
+import com.bcsdlab.biseo.dto.user.request.UserAuthDTO;
+import com.bcsdlab.biseo.dto.user.request.JwtDTO;
+import com.bcsdlab.biseo.dto.user.request.UserDepartmentDTO;
+import com.bcsdlab.biseo.dto.user.request.UserLoginDTO;
+import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
+import com.bcsdlab.biseo.dto.user.request.UserSignUpDTO;
+import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.service.UserService;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,118 +32,101 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    @ApiOperation(
-        value = "회원가입",
-        notes = "회원가입")
+    @ApiOperation(value = "회원가입",
+        notes = "회원 가입.\n\n"
+            + "학과 목록 : \n\n"
+            + "    기계공학부(1000),\n\n"
+            + "    메카트로닉스공학부(2000),\n\n"
+            + "    전기공학과(3000),\n\n"
+            + "    전자공학과(3100),\n\n"
+            + "    정보통신공학과(3200),\n\n"
+            + "    컴퓨터공학부(4000),\n\n"
+            + "    건축공학과(5000),\n\n"
+            + "    응용화학공학과(6000),\n\n"
+            + "    에너지신소재공학과(6100),\n\n"
+            + "    산업경영학부(7000),\n\n"
+            + "    고용서비스정책학과(8000),\n\n"
+            + "    전체(9000)")
     public ResponseEntity<UserResponseDTO> signUp(
         @RequestBody
         @Validated(ValidationGroups.SignUp.class)
-        @ApiParam(name = "request", value = "require : all", type = "UserRequestDTO" )
-        UserRequestDTO request) {
+        UserSignUpDTO request) {
         return new ResponseEntity<>(userService.signUp(request), HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    @ApiOperation(
-        value = "로그인",
-        notes = "로그인")
+    @ApiOperation(value = "로그인", notes = "로그인")
     public ResponseEntity<JwtDTO> login(
-        @RequestBody
-        @Validated(ValidationGroups.Login.class)
-        @ApiParam(name = "request", value = "require : accountId, password", type = "UserRequestDTO" )
-        UserRequestDTO request) {
+        @RequestBody @Validated(ValidationGroups.Login.class)
+        UserLoginDTO request) {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
     @PostMapping("/logout")
     @Auth
-    @ApiOperation(
-        value = "로그아웃",
-        notes = "로그아웃",
-        authorizations = {@Authorization(value = "Authorization")})
+    @ApiOperation(value = "로그아웃", notes = "로그아웃", authorizations = {@Authorization(value = "Authorization")})
     public ResponseEntity<String> logout() {
         return new ResponseEntity<>(userService.logout(), HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/refresh")
-    @ApiOperation(
-        value = "access 토큰 재발급",
-        notes = "access 토큰과 refresh 토큰을 사용하여 만료된 access 토큰을 재발급 받는다.")
-    public ResponseEntity<JwtDTO> refresh(
-        @RequestBody
-        @ApiParam(name = "jwtDto", value = "require : access, refresh", type = "JwtDTO" )
-        JwtDTO jwtDTO) {
+    @ApiOperation(value = "access 토큰 재발급", notes = "access 토큰과 refresh 토큰을 사용하여 만료된 access 토큰을 재발급 받는다.")
+    public ResponseEntity<JwtDTO> refresh(@RequestBody JwtDTO jwtDTO) {
         return new ResponseEntity<>(userService.refresh(jwtDTO), HttpStatus.OK);
     }
 
     @PostMapping("/send-mail")
-    @ApiOperation(
-        value = "인증메일 전송",
-        notes = "회원가입 인증, 비밀번호 찾기 인증 메일 전송")
-    public ResponseEntity<AuthCodeDTO> sendAuthMail(
-        @RequestBody
-        @Validated(ValidationGroups.Mail.class)
-        @ApiParam(name = "request", value = "require : accountId", type = "UserRequestDTO" )
-        UserRequestDTO request) {
-        return new ResponseEntity<>(userService.sendAuthMail(request), HttpStatus.OK);
+    @ApiOperation(value = "인증메일 전송", notes = "회원가입 인증, 비밀번호 찾기 인증 메일 전송")
+    public ResponseEntity<UserAuthDTO> sendAuthMail(@RequestParam(value = "accountId") String accountId) {
+        return new ResponseEntity<>(userService.sendAuthMail(accountId), HttpStatus.OK);
     }
 
     @PostMapping("/certify-signup")
-    @ApiOperation(
-        value = "회원가입 인증",
-        notes = "회원가입 인증용으로 보낸 코드 인증")
-    public ResponseEntity<String> certifySignUpMail(
-        @RequestBody
-        @ApiParam(name = "authCodeDTO", value = "require : accountId, authCode", type = "AuthCodeDTO" )
-        AuthCodeDTO authCodeDTO) {
-        return new ResponseEntity<>(userService.certifySignUpMail(authCodeDTO), HttpStatus.OK);
+    @ApiOperation(value = "회원가입 인증", notes = "회원가입 인증용으로 보낸 코드 인증")
+    public ResponseEntity<String> certifySignUpMail(@RequestBody UserAuthDTO userAuthDTO) {
+        return new ResponseEntity<>(userService.certifySignUpMail(userAuthDTO), HttpStatus.OK);
     }
 
     @PostMapping("/certify-password")
-    @ApiOperation(
-        value = "비밀번호 찾기 인증",
-        notes = "비밀번호 찾기 인증용으로 보낸 코드 인증")
-    public ResponseEntity<String> certifyPasswordMail(
-        @RequestBody
-        @ApiParam(name = "authCodeDTO", value = "require : accountId, authCode", type = "AuthCodeDTO" )
-        AuthCodeDTO authCodeDTO) {
-        return new ResponseEntity<>(userService.certifyPasswordMail(authCodeDTO), HttpStatus.OK);
+    @ApiOperation(value = "비밀번호 찾기 인증", notes = "비밀번호 찾기 인증용으로 보낸 코드 인증")
+    public ResponseEntity<String> certifyPasswordMail(@RequestBody UserAuthDTO userAuthDTO) {
+        return new ResponseEntity<>(userService.certifyPasswordMail(userAuthDTO), HttpStatus.OK);
     }
 
     @GetMapping("/me")
     @Auth
-    @ApiOperation(
-        value = "내 정보",
-        notes = "내 정보를 불러온다.",
-        authorizations = {@Authorization(value = "Authorization")})
+    @ApiOperation(value = "내 정보", notes = "내 정보를 불러온다.", authorizations = {@Authorization(value = "Authorization")})
     public ResponseEntity<UserResponseDTO> getMe() {
         return new ResponseEntity<>(userService.getMe(), HttpStatus.OK);
     }
 
     @PutMapping("/me/department")
     @Auth
-    @ApiOperation(
-        value = "학과/학년 수정",
-        notes = "내 학과/학년을 수정합니다.",
+    @ApiOperation(value = "학과/학년 수정",
+        notes = "내 학과/학년을 수정합니다.\n\n"
+            + "학과 목록 : \n\n"
+            + "    기계공학부(1000),\n\n"
+            + "    메카트로닉스공학부(2000),\n\n"
+            + "    전기공학과(3000),\n\n"
+            + "    전자공학과(3100),\n\n"
+            + "    정보통신공학과(3200),\n\n"
+            + "    컴퓨터공학부(4000),\n\n"
+            + "    건축공학과(5000),\n\n"
+            + "    응용화학공학과(6000),\n\n"
+            + "    에너지신소재공학과(6100),\n\n"
+            + "    산업경영학부(7000),\n\n"
+            + "    고용서비스정책학과(8000),\n\n"
+            + "    전체(9000)",
         authorizations = {@Authorization(value = "Authorization")})
     public ResponseEntity<UserResponseDTO> updateDepartment(
-        @RequestBody
-        @Validated(ValidationGroups.ChangeDepartment.class)
-        @ApiParam(name = "request", value = "require : department, grade", type = "UserRequestDTO" )
-        UserRequestDTO request) {
+        @RequestBody UserDepartmentDTO request) {
         return new ResponseEntity<>(userService.updateDepartment(request), HttpStatus.OK);
     }
 
     @PutMapping("/me/password")
     @Auth
-    @ApiOperation(
-        value = "비밀번호 변경",
-        notes = "비밀번호를 변경합니다.",
-        authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<String> updatePassword(
-        @RequestBody
-        @ApiParam(name = "request", value = "require : password", type = "UserRequestDTO" )
-        UserPasswordDTO passwordDTO) {
+    @ApiOperation(value = "비밀번호 변경", notes = "비밀번호를 변경합니다.", authorizations = {@Authorization(value = "Authorization")})
+    public ResponseEntity<String> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
         return new ResponseEntity<>(userService.updatePassword(passwordDTO), HttpStatus.OK);
     }
 }

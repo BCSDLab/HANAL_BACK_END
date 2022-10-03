@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.repository;
 
-import com.bcsdlab.biseo.dto.user.UserAuthModel;
-import com.bcsdlab.biseo.dto.user.UserModel;
+import com.bcsdlab.biseo.dto.user.model.UserAuthModel;
+import com.bcsdlab.biseo.dto.user.model.UserModel;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -16,5 +16,6 @@ public interface UserRepository {
     void setUserAuth(Long id);
     void updateDepartment(UserModel user);
     void updatePassword(UserModel user);
+    Integer findUserDepartmentById(Long id);
 
 }

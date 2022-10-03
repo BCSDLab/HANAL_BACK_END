@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bcsdlab.biseo.repository.NoticeRepository">
+    <insert id="createNotice" parameterType="NoticeModel" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Notice(user_id, title, content)
+        VALUES (#{userId}, #{title}, #{content});
+    </insert>
+
+    <insert id="createTarget" parameterType="NoticeTargetModel">
+        INSERT INTO
+            Notice_Target(notice_id, target)
+        VALUES
+            <foreach collection="list" item="model" separator=",">
+                (#{model.noticeId}, #{model.target})
+            </foreach>
+    </insert>
+
+    <resultMap id="noticeFileMap" type="NoticeFileModel">
+        <result property="path" column="path"/>
+        <result property="type" column="type"/>
+    </resultMap>
+
+    <resultMap id="noticeAndFileMap" type="NoticeAndFileModel">
+        <id property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <collection property="files" resultMap="noticeFileMap"/>
+    </resultMap>
+
+    <select id="findNoticeAndFileById" resultMap="noticeAndFileMap">
+        SELECT
+            n.id,
+            u.name as userId,
+            n.title,
+            n.content,
+            n.created_at,
+            n.updated_at,
+            f.path,
+            f.type
+        FROM
+            Notice n
+        LEFT JOIN Notice_File f ON n.id = f.notice_id
+        LEFT JOIN User u ON n.user_id = u.id
+        WHERE
+            n.id = #{noticeId} AND n.is_deleted = 0 AND f.is_deleted = 0;
+    </select>
+    
+    <select id="findReadLogByUserId" resultType="NoticeReadModel">
+        SELECT
+            *
+        FROM
+            Notice_Read
+        WHERE
+            user_id = #{userId} AND notice_id = #{noticeId} AND is_deleted = 0;
+    </select>
+
+    <insert id="createReadLog" parameterType="NoticeReadModel">
+        INSERT INTO Notice_Read(notice_id, user_id) VALUES (#{noticeId}, #{userId});
+    </insert>
+
+    <select id="findReadLogByNoticeId" resultType="UserModel">
+        SELECT
+            id, name, department
+        FROM
+            User
+        WHERE
+            id IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId} AND is_deleted = 0)
+    </select>
+
+    <select id="findNotReadLogByNoticeId" resultType="UserModel">
+        SELECT
+            id, name, department
+        FROM
+            User
+        WHERE
+            department NOT IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0)
+                AND
+            id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId} AND is_deleted = 0);
+    </select>
+
+    <select id="findTargetByNoticeId" resultType="Integer">
+        SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0;
+    </select>
+
+    <select id="findNoticeById" resultType="NoticeModel">
+        SELECT
+             id, user_id, title, content
+        FROM
+            Notice
+        WHERE
+            id = #{noticeId} AND is_deleted = 0;
+    </select>
+
+    <update id="updateNoticeById" parameterType="NoticeModel">
+        UPDATE
+            Notice
+        SET
+            title = #{title},
+            content = #{content}
+        WHERE
+            id = #{id};
+    </update>
+
+    <update id="deleteTargetByNoticeId">
+        UPDATE
+            Notice_Target
+        SET
+            is_deleted = 1
+        WHERE
+            notice_id = #{noticeId}
+    </update>
+
+    <update id="deleteReadListByNoticeId">
+        UPDATE
+            Notice_Read
+        SET
+            is_deleted = 1
+        WHERE
+            notice_id = #{noticeId}
+    </update>
+
+    <update id="deleteNoticeById">
+        UPDATE
+            Notice
+        SET
+            is_deleted = 1
+        WHERE
+            id = #{noticeId};
+    </update>
+
+    <insert id="createFiles" parameterType="NoticeFileModel">
+        INSERT INTO
+            Notice_File(notice_id, path, saved_name, type)
+        VALUES
+        <foreach collection="list" item="model" separator=",">
+            (#{model.noticeId}, #{model.path}, #{model.savedName}, #{model.type})
+        </foreach>
+        ;
+    </insert>
+
+    <update id="deleteNoticeFileByNoticeId">
+        UPDATE
+            Notice_File
+        SET
+            is_deleted = 1
+        WHERE
+            notice_id = #{noticeId}
+    </update>
+
+    <select id="getNoticeList" resultType="NoticeResponseDTO">
+        SELECT
+            n.id,
+            u.name AS userId,
+            (select path from Notice_File where notice_id = n.id and type = 'IMG' limit 1) as thumbnail,
+            n.title,
+            n.content,
+            n.created_at,
+            n.updated_at
+        FROM
+            Notice n
+        LEFT JOIN Notice_Target nt on n.id = nt.notice_id
+        LEFT JOIN User u ON n.user_id = u.id
+        WHERE
+            nt.target = #{department} AND nt.is_deleted = 0
+          <if test="cursor neq null">
+              AND n.id <![CDATA[<]]> #{cursor}
+          </if>
+          <if test="searchBy neq null and searchBy neq ''.toString()">
+              AND n.title LIKE CONCAT('%',#{searchBy},'%')
+          </if>
+            AND n.is_deleted = 0
+        ORDER BY
+            n.id desc
+        LIMIT
+            <choose>
+                <when test="limits == null || limits lte 0">
+                    5;
+                </when>
+                <otherwise>
+                    #{limits};
+                </otherwise>
+            </choose>
+    </select>
+</mapper>

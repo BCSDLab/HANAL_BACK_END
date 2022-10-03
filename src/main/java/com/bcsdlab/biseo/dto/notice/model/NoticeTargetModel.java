@@ -1,6 +1,5 @@
-package com.bcsdlab.biseo.dto.user;
+package com.bcsdlab.biseo.dto.notice.model;
 
-import com.bcsdlab.biseo.enums.UserType;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,17 +10,16 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserModel {
-
+public class NoticeTargetModel {
     private Long id;
-    private String name;
-    private String accountId;
-    private String password;
-    private String studentId;
-    private Integer department;
-    private UserType userType;
+    private Long noticeId;
+    private int target;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private Boolean isAuth;
     private Boolean isDeleted;
+
+    public NoticeTargetModel(Long noticeId, int target) {
+        this.noticeId = noticeId;
+        this.target = target;
+    }
 }

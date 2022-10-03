@@ -42,4 +42,8 @@
     <update id="updatePassword">
         UPDATE User SET password = #{password} WHERE id = #{id}
     </update>
+
+    <select id="findUserDepartmentById" resultType="Integer">
+        SELECT department FROM User WHERE id = #{id};
+    </select>
 </mapper>

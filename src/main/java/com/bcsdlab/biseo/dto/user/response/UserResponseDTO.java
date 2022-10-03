@@ -1,5 +1,6 @@
-package com.bcsdlab.biseo.dto.user;
+package com.bcsdlab.biseo.dto.user.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.user;
+package com.bcsdlab.biseo.dto.user.model;
 
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;
