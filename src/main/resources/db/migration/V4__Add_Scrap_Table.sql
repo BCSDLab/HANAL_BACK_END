@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS Scrap (
+    id              BIGINT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    notice_id       BIGINT      NOT NULL,
+    user_id         BIGINT      NOT NULL,
+    created_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    updated_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    is_deleted      TINYINT(1)  NOT NULL DEFAULT 0,
+    FOREIGN KEY (notice_id) REFERENCES Notice(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE
+);
