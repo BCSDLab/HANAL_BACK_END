@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.sql.Timestamp;
@@ -19,9 +19,9 @@ public class NoticeResponseDTO {
     private String userId;
     private String title;
     private String content;
-    private String thumbnail;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private Long scrapId;
     private List<String> files = new ArrayList<>();
     private List<String> imgs = new ArrayList<>();
 

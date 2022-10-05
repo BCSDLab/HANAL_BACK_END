@@ -1,4 +1,4 @@
-package com.bcsdlab.biseo.dto.notice;
+package com.bcsdlab.biseo.dto.notice.request;
 
 import com.bcsdlab.biseo.enums.Department;
 import io.swagger.annotations.ApiModelProperty;

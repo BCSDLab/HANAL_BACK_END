@@ -4,8 +4,9 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
-import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
-import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
+import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
@@ -76,15 +77,15 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeId < 1) {
             throw new RuntimeException("잘못된 접근입니다.");
         }
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
 
         // 공지 조회
-        NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId);
+        NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId, userId);
         if (noticeAndFile == null) {
             throw new RuntimeException("존재하지 않는 공지입니다.");
         }
 
         // 조회 가능한 학과인가?
-        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
         List<Integer> noticeTarget = noticeRepository.findTargetByNoticeId(noticeId);
         if (!noticeTarget.contains(userDepartment)) {
@@ -116,12 +117,11 @@ public class NoticeServiceImpl implements NoticeService {
 
     // 커서기반 페이지네이션
     @Override
-    public List<NoticeResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
+    public List<NoticeListResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
-        List<NoticeResponseDTO> noticeModelList = noticeRepository.getNoticeList(userDepartment, searchBy, cursor, limits);
 
-        return noticeModelList;
+        return noticeRepository.getNoticeList(userDepartment, userId, searchBy, cursor, limits);
     }
 
     @Override
