@@ -7,4 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface ScrapRepository {
 
     void createScrap(ScrapModel scrapModel);
+
+    ScrapModel findScrapByUserIdAndNoticeId(Long userId, Long noticeId);
+    void deleteScrapById(Long id);
 }

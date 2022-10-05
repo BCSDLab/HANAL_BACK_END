@@ -36,11 +36,31 @@ public class ScrapServiceImpl implements ScrapService {
             throw new RuntimeException("스크랩 권한이 없습니다.");
         }
 
+        ScrapModel scrap = scrapRepository.findScrapByUserIdAndNoticeId(user.getId(), noticeId);
+        if (scrap != null) {
+            throw new RuntimeException("스크랩이 이미 존재합니다.");
+        }
+        
         ScrapModel scrapModel = new ScrapModel();
         scrapModel.setUserId(user.getId());
         scrapModel.setNoticeId(noticeId);
         scrapRepository.createScrap(scrapModel);
 
         return ScrapMapper.INSTANCE.toScrapResponse(scrapModel);
+    }
+
+    @Override
+    public void deleteScrap(Long noticeId) {
+        UserModel user = userRepository.findById(Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0)));
+        if (user == null) {
+            throw new RuntimeException("유저가 존재하지 않습니다.");
+        }
+
+        ScrapModel scrap = scrapRepository.findScrapByUserIdAndNoticeId(user.getId(), noticeId);
+        if (scrap == null) {
+            throw new RuntimeException("스크랩이 존재하지 않습니다.");
+        }
+
+        scrapRepository.deleteScrapById(scrap.getId());
     }
 }

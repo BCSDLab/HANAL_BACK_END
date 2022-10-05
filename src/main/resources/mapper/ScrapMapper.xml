@@ -5,4 +5,18 @@
         INSERT INTO Scrap(user_id, notice_id)
         VALUES (#{userId}, #{noticeId});
     </insert>
+
+    <select id="findScrapByUserIdAndNoticeId" resultType="ScrapModel">
+        SELECT * FROM Scrap
+        WHERE user_id = #{userId} AND notice_id = #{noticeId} AND is_deleted = 0;
+    </select>
+
+    <update id="deleteScrapById">
+        UPDATE
+            Scrap
+        SET
+            is_deleted = 1
+        WHERE
+            id = #{id}
+    </update>
 </mapper>
