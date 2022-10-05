@@ -11,6 +11,11 @@
         WHERE user_id = #{userId} AND notice_id = #{noticeId} AND is_deleted = 0;
     </select>
 
+    <select id="findScrapById" resultType="ScrapModel">
+        SELECT * FROM Scrap
+        WHERE id = #{scrapId} AND is_deleted = 0;
+    </select>
+
     <update id="deleteScrapById">
         UPDATE
             Scrap

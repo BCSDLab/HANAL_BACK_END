@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,18 +22,18 @@ public class ScrapController {
 
     private final ScrapService scrapService;
 
-    @PostMapping("/{noticeId}")
+    @PostMapping
     @Auth
     @ApiOperation(value = "스크랩 등록", notes = "스크랩을 등록합니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<ScrapResponse> createScrap(@PathVariable(value = "noticeId") Long noticeId) {
+    public ResponseEntity<ScrapResponse> createScrap(@RequestParam(value = "noticeId") Long noticeId) {
         return new ResponseEntity<>(scrapService.createScrap(noticeId), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{noticeId}")
+    @DeleteMapping("/{scrapId}")
     @Auth
     @ApiOperation(value = "스크랩 취소", notes = "스크랩을 취소합니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<Void> deleteScrap(@PathVariable(value = "noticeId") Long noticeId) {
-        scrapService.deleteScrap(noticeId);
+    public ResponseEntity<Void> deleteScrap(@PathVariable(value = "scrapId") Long scrapId) {
+        scrapService.deleteScrap(scrapId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

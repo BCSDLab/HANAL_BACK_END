@@ -9,5 +9,6 @@ public interface ScrapRepository {
     void createScrap(ScrapModel scrapModel);
 
     ScrapModel findScrapByUserIdAndNoticeId(Long userId, Long noticeId);
+    ScrapModel findScrapById(Long scrapId);
     void deleteScrapById(Long id);
 }

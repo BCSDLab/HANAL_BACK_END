@@ -5,5 +5,5 @@ import com.bcsdlab.biseo.dto.scrap.response.ScrapResponse;
 public interface ScrapService {
 
     ScrapResponse createScrap(Long noticeId);
-    void deleteScrap(Long noticeId);
+    void deleteScrap(Long scrapId);
 }
