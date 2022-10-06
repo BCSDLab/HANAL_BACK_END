@@ -1,14 +1,18 @@
 package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
-import com.bcsdlab.biseo.dto.scrap.response.ScrapResponse;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapResponseDTO;
 import com.bcsdlab.biseo.service.ScrapService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +26,20 @@ public class ScrapController {
 
     private final ScrapService scrapService;
 
+    @GetMapping
+    @Auth
+    @ApiOperation(value = "스크랩 목록", notes = "스크랩 목록을 불러옵니다.", authorizations = {@Authorization(value = "Authorization")})
+    public ResponseEntity<List<ScrapListResponseDTO>> getScrapList(
+        @ApiParam(name = "searchBy", value = "제목 검색") @RequestParam(value = "searchBy", required = false) String searchBy,
+        @ApiParam(name = "cursor", value = "커서 기반 페이지네이션 사용") @RequestParam(value = "cursor", required = false) Long cursor,
+        @ApiParam(name = "limits", value = "커서 기준으로 limits개 검색") @RequestParam(value = "limits", required = false) Integer limits) {
+        return new ResponseEntity<>(scrapService.getScrapList(searchBy, cursor, limits), HttpStatus.OK);
+    }
+
     @PostMapping
     @Auth
     @ApiOperation(value = "스크랩 등록", notes = "스크랩을 등록합니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<ScrapResponse> createScrap(@RequestParam(value = "noticeId") Long noticeId) {
+    public ResponseEntity<ScrapResponseDTO> createScrap(@RequestParam(value = "noticeId") Long noticeId) {
         return new ResponseEntity<>(scrapService.createScrap(noticeId), HttpStatus.OK);
     }
 

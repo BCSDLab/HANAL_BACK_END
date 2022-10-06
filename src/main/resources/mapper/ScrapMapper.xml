@@ -24,4 +24,39 @@
         WHERE
             id = #{id}
     </update>
+
+    <select id="getScrapList" resultType="ScrapListResponseDTO">
+        SELECT
+            s.id,
+            u.name as userId,
+            n.id as noticeId,
+            n.title,
+            n.content,
+            (select path from Notice_File where notice_id = n.id and type = 'IMG' limit 1) as thumbnail,
+            s.created_at
+        FROM
+            Scrap s
+        LEFT JOIN Notice n on n.id = s.notice_id
+        LEFT JOIN User u ON u.id = n.user_id
+        WHERE
+            s.user_id = #{userId}
+        <if test="cursor neq null">
+            AND s.id <![CDATA[<]]> #{cursor}
+        </if>
+        <if test="searchBy neq null and searchBy neq ''.toString()">
+            AND n.title LIKE CONCAT('%',#{searchBy},'%')
+        </if>
+        AND s.is_deleted = 0
+        ORDER BY
+        s.id desc
+        LIMIT
+        <choose>
+            <when test="limits == null || limits lte 0">
+                5;
+            </when>
+            <otherwise>
+                #{limits};
+            </otherwise>
+        </choose>
+    </select>
 </mapper>

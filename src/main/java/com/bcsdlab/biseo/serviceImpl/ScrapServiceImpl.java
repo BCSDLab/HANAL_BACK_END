@@ -1,8 +1,8 @@
 package com.bcsdlab.biseo.serviceImpl;
 
-import com.bcsdlab.biseo.dto.notice.model.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.scrap.ScrapModel;
-import com.bcsdlab.biseo.dto.scrap.response.ScrapResponse;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapResponseDTO;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
 import com.bcsdlab.biseo.mapper.ScrapMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
@@ -24,7 +24,7 @@ public class ScrapServiceImpl implements ScrapService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public ScrapResponse createScrap(Long noticeId) {
+    public ScrapResponseDTO createScrap(Long noticeId) {
         UserModel user = userRepository.findById(Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0)));
         if (user == null) {
             throw new RuntimeException("유저가 존재하지 않습니다.");
@@ -66,5 +66,11 @@ public class ScrapServiceImpl implements ScrapService {
         }
 
         scrapRepository.deleteScrapById(scrap.getId());
+    }
+
+    @Override
+    public List<ScrapListResponseDTO> getScrapList(String searchBy, Long cursor, Integer limits) {
+        Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
+        return scrapRepository.getScrapList(userId, searchBy, cursor, limits);
     }
 }
