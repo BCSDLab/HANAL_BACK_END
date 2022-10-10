@@ -16,7 +16,7 @@ configurations {
 }
 
 bootWar{
-	archivesBaseName = 'JjbacsaBackEnd'
+	archivesBaseName = 'BiseoBackEnd'
 	archiveFileName = 'ROOT.war'
 	archiveVersion = "0.0.1"
 }
