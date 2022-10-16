@@ -1,9 +1,6 @@
-package com.bcsdlab.biseo.dto.notice.model;
-
+package com.bcsdlab.biseo.dto.scrap.response;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,13 +10,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeAndFileModel {
-    private Long id;
+public class ScrapListResponseDTO {
+
+    private Long Id;
     private String userId;
+    private Long noticeId;
     private String title;
     private String content;
+    private String thumbnail;
     private Timestamp createdAt;
-    private Timestamp updatedAt;
-    private Long scrapId;
-    private List<NoticeFileModel> files = new ArrayList<>();
 }

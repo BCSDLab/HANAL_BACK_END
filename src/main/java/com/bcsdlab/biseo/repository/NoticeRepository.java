@@ -4,7 +4,8 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
-import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
 import java.util.List;
@@ -15,8 +16,8 @@ public interface NoticeRepository {
 
     void createNotice(NoticeModel noticeModel);
     void createTarget(List<NoticeTargetModel> targetModel);
-    List<NoticeResponseDTO> getNoticeList(Integer department, String searchBy, Long cursor, Integer limits);
-    NoticeAndFileModel findNoticeAndFileById(Long id);
+    List<NoticeListResponseDTO> getNoticeList(Integer department, Long userId, String searchBy, Long cursor, Integer limits);
+    NoticeAndFileModel findNoticeAndFileById(Long noticeId, Long userId);
     NoticeReadModel findReadLogByUserId(Long noticeId, Long userId);
     void createReadLog(NoticeReadModel noticeReadModel);
     List<UserModel> findReadLogByNoticeId(Long noticeId);

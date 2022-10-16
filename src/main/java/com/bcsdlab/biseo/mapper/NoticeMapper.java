@@ -2,8 +2,8 @@ package com.bcsdlab.biseo.mapper;
 
 import com.bcsdlab.biseo.dto.notice.model.NoticeAndFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
-import com.bcsdlab.biseo.dto.notice.NoticeRequestDTO;
-import com.bcsdlab.biseo.dto.notice.NoticeResponseDTO;
+import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
