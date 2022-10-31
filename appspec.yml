@@ -1,0 +1,28 @@
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu/deploy
+    overwrite: yes
+    
+permissions:
+  - object: /
+    pattern: "**"
+    owner: tomcat
+    group: tomcat
+    mode: 755
+    
+hooks:
+  BeforeInstall:
+    - location: scripts/stopApp.sh
+      timeout: 60
+      runas: tomcat
+  AfterInstall:
+    - location: scripts/deploy.sh
+      timeout: 60
+      runas: tomcat
+  ApplicationStart:
+    - location: scripts/startApp.sh
+      timeout: 60
+      runas: tomcat
