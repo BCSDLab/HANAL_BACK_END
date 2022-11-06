@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
         String accessToken = jwtUtil.getAccessToken(user);
         String key = String.format("user:%s:refresh", user.getId());
         Optional<String> refreshTokenOptional = Optional.ofNullable(
-                operations.get(key)).filter(t -> !jwtUtil.isExpired(t));
+            operations.get(key)).filter(t -> !jwtUtil.isExpired(t));
 
         String refreshToken = refreshTokenOptional.orElseGet(() -> {
             String newToken = jwtUtil.getRefreshToken(user);
@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String certifySignUpMail(UserAuthDTO userAuthDTO) {
+    public void certifySignUpMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
             userAuthDTO.getAccountId());
 
@@ -177,11 +177,10 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
         userRepository.setUserAuth(userRepository.findByAccountId(userAuthDTO.getAccountId()).getId());
-        return "인증이 완료되었습니다.";
     }
 
     @Override
-    public String certifyPasswordMail(UserAuthDTO userAuthDTO) {
+    public void certifyPasswordMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
             userAuthDTO.getAccountId());
 
@@ -200,9 +199,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         userRepository.updatePassword(user);
         // 비밀번호 전송
-       mailUtil.sendPasswordMail(user, newPassword);
-
-        return "비밀번호가 메일로 전송되었습니다.";
+        mailUtil.sendPasswordMail(user, newPassword);
     }
 
     @Override
@@ -225,7 +222,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String updatePassword(UserPasswordDTO passwordDTO) {
+    public void updatePassword(UserPasswordDTO passwordDTO) {
         DecodedJWT decodedJWT = jwtUtil.findUserInfoInToken();
         UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
 
@@ -235,7 +232,6 @@ public class UserServiceImpl implements UserService {
 
         user.setPassword(BCrypt.hashpw(passwordDTO.getNewPassword(), BCrypt.gensalt()));
         userRepository.updatePassword(user);
-        return "비밀번호가 변경되었습니다.";
     }
 
     private UserResponseDTO getUserResponse(UserModel me) {
@@ -258,17 +254,19 @@ public class UserServiceImpl implements UserService {
     }
 
     private String makeNewPassword() {
-        final char[] charSet = new char[] {
+        final char[] charSet = new char[]{
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-            '!', '@', '#', '$', '%', '^', '&' };
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+            'V', 'W', 'X', 'Y', 'Z',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+            'v', 'w', 'x', 'y', 'z',
+            '!', '@', '#', '$', '%', '^', '&'};
 
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
 
         int len = charSet.length;
-        for (int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             sb.append(charSet[random.nextInt(len)]);
         }
 

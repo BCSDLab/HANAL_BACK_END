@@ -2,8 +2,8 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.annotation.ValidationGroups;
-import com.bcsdlab.biseo.dto.user.request.UserAuthDTO;
 import com.bcsdlab.biseo.dto.user.request.JwtDTO;
+import com.bcsdlab.biseo.dto.user.request.UserAuthDTO;
 import com.bcsdlab.biseo.dto.user.request.UserDepartmentDTO;
 import com.bcsdlab.biseo.dto.user.request.UserLoginDTO;
 import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
@@ -48,25 +48,23 @@ public class UserController {
             + "    고용서비스정책학과(8000),\n\n"
             + "    전체(9000)")
     public ResponseEntity<UserResponseDTO> signUp(
-        @RequestBody
-        @Validated(ValidationGroups.SignUp.class)
-        UserSignUpDTO request) {
+        @RequestBody @Validated(ValidationGroups.SignUp.class) UserSignUpDTO request) {
         return new ResponseEntity<>(userService.signUp(request), HttpStatus.OK);
     }
 
     @PostMapping("/login")
     @ApiOperation(value = "로그인", notes = "로그인")
     public ResponseEntity<JwtDTO> login(
-        @RequestBody @Validated(ValidationGroups.Login.class)
-        UserLoginDTO request) {
+        @RequestBody @Validated(ValidationGroups.Login.class) UserLoginDTO request) {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
     @PostMapping("/logout")
     @Auth
     @ApiOperation(value = "로그아웃", notes = "로그아웃", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<String> logout() {
-        return new ResponseEntity<>(userService.logout(), HttpStatus.NO_CONTENT);
+    public ResponseEntity<Void> logout() {
+        userService.logout();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/refresh")
@@ -83,14 +81,16 @@ public class UserController {
 
     @PostMapping("/certify-signup")
     @ApiOperation(value = "회원가입 인증", notes = "회원가입 인증용으로 보낸 코드 인증")
-    public ResponseEntity<String> certifySignUpMail(@RequestBody UserAuthDTO userAuthDTO) {
-        return new ResponseEntity<>(userService.certifySignUpMail(userAuthDTO), HttpStatus.OK);
+    public ResponseEntity<Void> certifySignUpMail(@RequestBody UserAuthDTO userAuthDTO) {
+        userService.certifySignUpMail(userAuthDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/certify-password")
     @ApiOperation(value = "비밀번호 찾기 인증", notes = "비밀번호 찾기 인증용으로 보낸 코드 인증")
-    public ResponseEntity<String> certifyPasswordMail(@RequestBody UserAuthDTO userAuthDTO) {
-        return new ResponseEntity<>(userService.certifyPasswordMail(userAuthDTO), HttpStatus.OK);
+    public ResponseEntity<Void> certifyPasswordMail(@RequestBody UserAuthDTO userAuthDTO) {
+        userService.certifyPasswordMail(userAuthDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/me")
@@ -126,7 +126,8 @@ public class UserController {
     @PutMapping("/me/password")
     @Auth
     @ApiOperation(value = "비밀번호 변경", notes = "비밀번호를 변경합니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<String> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
-        return new ResponseEntity<>(userService.updatePassword(passwordDTO), HttpStatus.OK);
+    public ResponseEntity<Void> updatePassword(@RequestBody UserPasswordDTO passwordDTO) {
+        userService.updatePassword(passwordDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

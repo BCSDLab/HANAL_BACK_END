@@ -15,9 +15,9 @@ public interface UserService {
     String logout();
     JwtDTO refresh(JwtDTO jwtDTO);
     UserAuthDTO sendAuthMail(String accountId);
-    String certifySignUpMail(UserAuthDTO userAuthDTO);
-    String certifyPasswordMail(UserAuthDTO userAuthDTO);
+    void certifySignUpMail(UserAuthDTO userAuthDTO);
+    void certifyPasswordMail(UserAuthDTO userAuthDTO);
     UserResponseDTO getMe();
     UserResponseDTO updateDepartment(UserDepartmentDTO request);
-    String updatePassword(UserPasswordDTO passwordDTO);
+    void updatePassword(UserPasswordDTO passwordDTO);
 }
