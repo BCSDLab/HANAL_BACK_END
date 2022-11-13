@@ -2,7 +2,6 @@ package com.bcsdlab.biseo.interceptor;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bcsdlab.biseo.annotation.Auth;
-import com.bcsdlab.biseo.enums.UserType;
 import com.bcsdlab.biseo.util.JwtUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

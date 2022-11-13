@@ -8,14 +8,23 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserRepository {
 
     UserModel findByAccountId(String accountId);
+
     UserModel findById(Long id);
+
     void signUp(UserModel user);
+
     void addAuthNum(UserAuthModel userAuthModel);
+
     UserAuthModel findRecentAuthNumByUserAccountId(String accountId);
+
     void deleteAuthNumById(Long id);
+
     void setUserAuth(Long id);
+
     void updateDepartment(UserModel user);
+
     void updatePassword(UserModel user);
+
     Integer findUserDepartmentById(Long id);
 
 }
