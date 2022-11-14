@@ -4,6 +4,10 @@ import com.bcsdlab.biseo.dto.scrap.ScrapModel;
 import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
 import com.bcsdlab.biseo.dto.scrap.response.ScrapResponseDTO;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
+import com.bcsdlab.biseo.enums.ErrorMessage;
+import com.bcsdlab.biseo.exception.AuthException;
+import com.bcsdlab.biseo.exception.BadRequestException;
+import com.bcsdlab.biseo.exception.NotFoundException;
 import com.bcsdlab.biseo.mapper.ScrapMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
 import com.bcsdlab.biseo.repository.ScrapRepository;
@@ -27,18 +31,18 @@ public class ScrapServiceImpl implements ScrapService {
     public ScrapResponseDTO createScrap(Long noticeId) {
         UserModel user = userRepository.findById(Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0)));
         if (user == null) {
-            throw new RuntimeException("유저가 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
         List<Integer> noticeTarget = noticeRepository.findTargetByNoticeId(noticeId);
         if (noticeTarget.size() == 0) {
-            throw new RuntimeException("공지가 존재하지 않습니다.");
+            throw new NotFoundException(ErrorMessage.NOTICE_NOT_FOUND);
         } else if (!noticeTarget.contains(user.getDepartment())) {
-            throw new RuntimeException("스크랩 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.SCRAP_DENIED);
         }
 
         ScrapModel scrap = scrapRepository.findScrapByUserIdAndNoticeId(user.getId(), noticeId);
         if (scrap != null) {
-            throw new RuntimeException("스크랩이 이미 존재합니다.");
+            throw new BadRequestException(ErrorMessage.SCRAP_EXIST);
         }
 
         ScrapModel scrapModel = new ScrapModel();
@@ -53,16 +57,16 @@ public class ScrapServiceImpl implements ScrapService {
     public void deleteScrap(Long scrapId) {
         UserModel user = userRepository.findById(Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0)));
         if (user == null) {
-            throw new RuntimeException("유저가 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
 
         ScrapModel scrap = scrapRepository.findScrapById(scrapId);
         if (scrap == null) {
-            throw new RuntimeException("스크랩이 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.SCRAP_NOT_EXIST);
         }
 
         if (!scrap.getUserId().equals(user.getId())) {
-            throw new RuntimeException("스크랩 삭제 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.SCRAP_DELETE_DENIED);
         }
 
         scrapRepository.deleteScrapById(scrap.getId());

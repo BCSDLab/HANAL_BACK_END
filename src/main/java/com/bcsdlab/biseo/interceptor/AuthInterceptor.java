@@ -2,6 +2,8 @@ package com.bcsdlab.biseo.interceptor;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bcsdlab.biseo.annotation.Auth;
+import com.bcsdlab.biseo.enums.ErrorMessage;
+import com.bcsdlab.biseo.exception.AuthException;
 import com.bcsdlab.biseo.util.JwtUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,24 +33,24 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 토큰 길이 인증
         String bearerToken = request.getHeader("Authorization");
         if (!jwtUtil.isValidForm(bearerToken)) {
-            throw new RuntimeException("올바르지 않은 토큰입니다.");
+            throw new AuthException(ErrorMessage.ACCESS_TOKEN_INVALID);
         }
         String token = bearerToken.substring(7);
 
         // 토큰 만료 인증
         if (jwtUtil.isExpired(token)) {
-            throw new RuntimeException("토큰이 만료되었습니다.");
+            throw new AuthException(ErrorMessage.ACCESS_TOKEN_EXPIRED);
         }
 
         // 토큰 타입 인증
         if (!jwtUtil.isValid(token, "access")) {
-            throw new RuntimeException("잘못된 토큰입니다.");
+            throw new AuthException(ErrorMessage.ACCESS_TOKEN_INVALID);
         }
 
         // 권한 인증
         DecodedJWT decodedJWT = jwtUtil.getDecodedJWT(token);
         if (decodedJWT.getClaim("type").asInt() < auth.type().getLevel()) {
-            throw new RuntimeException("해당 서비스에 대한 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.NO_AUTHORIZATION);
         }
 
         return true;
