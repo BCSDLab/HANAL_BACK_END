@@ -11,7 +11,12 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
+import com.bcsdlab.biseo.enums.ErrorMessage;
 import com.bcsdlab.biseo.enums.FileType;
+import com.bcsdlab.biseo.exception.AuthException;
+import com.bcsdlab.biseo.exception.BadRequestException;
+import com.bcsdlab.biseo.exception.CriticalException;
+import com.bcsdlab.biseo.exception.NotFoundException;
 import com.bcsdlab.biseo.mapper.NoticeMapper;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.NoticeRepository;
@@ -42,7 +47,7 @@ public class NoticeServiceImpl implements NoticeService {
     public Long createNotice(NoticeRequestDTO request) {
         // 예외 처리
         if (request.getGrade().size() == 0) {
-            throw new RuntimeException("학년을 선택해야 합니다.");
+            throw new BadRequestException(ErrorMessage.GRADE_REQUIRED);
         }
 
         // notice 기본 정보 저장
@@ -75,21 +80,21 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public NoticeResponseDTO getNotice(Long noticeId) {
         if (noticeId < 1) {
-            throw new RuntimeException("잘못된 접근입니다.");
+            throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
         }
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
 
         // 공지 조회
         NoticeAndFileModel noticeAndFile = noticeRepository.findNoticeAndFileById(noticeId, userId);
         if (noticeAndFile == null) {
-            throw new RuntimeException("존재하지 않는 공지입니다.");
+            throw new NotFoundException(ErrorMessage.NOTICE_NOT_FOUND);
         }
 
         // 조회 가능한 학과인가?
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
         List<Integer> noticeTarget = noticeRepository.findTargetByNoticeId(noticeId);
         if (!noticeTarget.contains(userDepartment)) {
-            throw new RuntimeException("읽을 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.NO_AUTHORIZATION);
         }
 
         NoticeResponseDTO response = NoticeMapper.INSTANCE.toResponseDTO(noticeAndFile);
@@ -127,11 +132,11 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead) {
         if (noticeId < 1 || isRead == null) {
-            throw new RuntimeException("잘못된 접근입니다.");
+            throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
         }
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
-            throw new RuntimeException("존재하지 않는 공지입니다.");
+            throw new NotFoundException(ErrorMessage.NOTICE_NOT_FOUND);
         }
         List<UserModel> userList = isRead ? noticeRepository.findReadLogByNoticeId(noticeId)
             : noticeRepository.findNotReadLogByNoticeId(noticeId);
@@ -154,13 +159,13 @@ public class NoticeServiceImpl implements NoticeService {
         // 공지가 존재하지 않는다면
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
-            throw new RuntimeException("존재하지 않는 공지입니다.");
+            throw new NotFoundException(ErrorMessage.NOTICE_NOT_FOUND);
         }
 
         // 작성자가 아니라면
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         if (!notice.getUserId().equals(userId)) {
-            throw new RuntimeException("수정 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.NO_AUTHORIZATION);
         }
 
         // 전부 다시 업로드
@@ -198,13 +203,13 @@ public class NoticeServiceImpl implements NoticeService {
     public String deleteNotice(Long noticeId) {
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
-            throw new RuntimeException("존재하지 않는 공지입니다.");
+            throw new NotFoundException(ErrorMessage.NOTICE_NOT_FOUND);
         }
 
         // 작성자가 아니라면
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         if (!notice.getUserId().equals(userId)) {
-            throw new RuntimeException("삭제 권한이 없습니다.");
+            throw new AuthException(ErrorMessage.NO_AUTHORIZATION);
         }
 
         noticeRepository.deleteNoticeById(noticeId);
@@ -228,7 +233,7 @@ public class NoticeServiceImpl implements NoticeService {
             try {
                 model.setPath(s3Util.uploadFile(savedName, file));
             } catch (IOException e) {
-                throw new RuntimeException("파일 업로드 중 문제가 발생하였습니다.");
+                throw new CriticalException(ErrorMessage.FILE_UPLOAD_FAIL);
             }
             models.add(model);
         }

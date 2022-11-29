@@ -11,6 +11,9 @@ import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.request.UserSignUpDTO;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.enums.Department;
+import com.bcsdlab.biseo.enums.ErrorMessage;
+import com.bcsdlab.biseo.exception.AuthException;
+import com.bcsdlab.biseo.exception.BadRequestException;
 import com.bcsdlab.biseo.mapper.UserMapper;
 import com.bcsdlab.biseo.repository.UserRepository;
 import com.bcsdlab.biseo.service.UserService;
@@ -41,7 +44,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO signUp(UserSignUpDTO request) {
         if (userRepository.findByAccountId(request.getAccountId()) != null) {
-            throw new RuntimeException("존재하는 계정입니다.");
+            throw new BadRequestException(ErrorMessage.USER_ID_EXIST);
         }
         UserModel user = UserMapper.INSTANCE.toUserModel(request);
 
@@ -56,16 +59,15 @@ public class UserServiceImpl implements UserService {
     public JwtDTO login(UserLoginDTO request) {
         UserModel user = userRepository.findByAccountId(request.getAccountId());
         if (user == null) {
-            throw new RuntimeException("존재하지 않는 아이디입니다.");
+            throw new BadRequestException(ErrorMessage.USER_ID_NOT_EXIST);
         }
 
         if (!BCrypt.checkpw(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.PASSWORD_INVALID);
         }
 
         if (!user.getIsAuth()) {
-            // 402
-            throw new RuntimeException("인증되지 않은 사용자입니다. 인증을 진행해주세요.");
+            throw new AuthException(ErrorMessage.USER_NOT_AUTHORIZATION);
         }
 
         JwtDTO response = new JwtDTO();
@@ -100,7 +102,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public JwtDTO refresh(JwtDTO jwtDTO) {
         if (!jwtUtil.isValid(jwtDTO.getRefresh(), "refresh")) {
-            throw new RuntimeException("토큰이 만료되었거나, 올바르지 않습니다.");
+            throw new AuthException(ErrorMessage.REFRESH_TOKEN_EXPIRED);
         }
         DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(jwtDTO.getRefresh());
 
@@ -108,7 +110,7 @@ public class UserServiceImpl implements UserService {
         String key = String.format("user:%s:refresh", decodedRefreshJWT.getAudience().get(0));
         String refreshToken = Optional.ofNullable(operations.get(key))
             .filter(t -> t.equals(jwtDTO.getRefresh()))
-            .orElseThrow(() -> new RuntimeException("올바르지 않은 토큰입니다. 다시 로그인해야 합니다."));
+            .orElseThrow(() -> new AuthException(ErrorMessage.REFRESH_TOKEN_EXPIRED));
 
         // 문제가 없으면 토큰 정보로 회원 조회 후 다시 토큰 생성
         Long userId = Long.parseLong(decodedRefreshJWT.getAudience().get(0));
@@ -129,11 +131,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserAuthDTO sendAuthMail(String accountId) {
         if (accountId == null || accountId.equals("")) {
-            throw new RuntimeException("유저가 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
         UserModel user = userRepository.findByAccountId(accountId);
         if (user == null) {
-            throw new RuntimeException("유저가 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
 
         // 이전 발송 메일이랑 시간 차이 계산
@@ -141,7 +143,7 @@ public class UserServiceImpl implements UserService {
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (recentAuthNum != null
             && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
-            throw new RuntimeException("메일 전송이 불가능합니다.");
+            throw new BadRequestException(ErrorMessage.SEND_MAIL_FAIL);
         }
         if (recentAuthNum != null) {
             userRepository.deleteAuthNumById(recentAuthNum.getId());
@@ -168,11 +170,11 @@ public class UserServiceImpl implements UserService {
             userAuthDTO.getAccountId());
 
         if (recentAuthNum == null) {
-            throw new RuntimeException("이메일 인증을 먼저 해주세요");
+            throw new BadRequestException(ErrorMessage.SEND_MAIL_FIRST);
         }
 
         if (!userAuthDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
-            throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
+            throw new BadRequestException(ErrorMessage.AUTH_CODE_INVALID);
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
@@ -185,11 +187,11 @@ public class UserServiceImpl implements UserService {
             userAuthDTO.getAccountId());
 
         if (recentAuthNum == null) {
-            throw new RuntimeException("이메일 인증을 먼저 해주세요");
+            throw new BadRequestException(ErrorMessage.SEND_MAIL_FIRST);
         }
 
         if (!userAuthDTO.getAuthCode().equals(recentAuthNum.getAuthNum())) {
-            throw new RuntimeException("인증번호가 다릅니다. 인증번호를 확인해주세요");
+            throw new BadRequestException(ErrorMessage.AUTH_CODE_INVALID);
         }
 
         userRepository.deleteAuthNumById(recentAuthNum.getId());
@@ -227,7 +229,7 @@ public class UserServiceImpl implements UserService {
         UserModel user = userRepository.findById(Long.parseLong(decodedJWT.getAudience().get(0)));
 
         if (!BCrypt.checkpw(passwordDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("기존 비밀번호가 다릅니다.");
+            throw new BadRequestException(ErrorMessage.CHANGE_PASSWORD_FAIL);
         }
 
         user.setPassword(BCrypt.hashpw(passwordDTO.getNewPassword(), BCrypt.gensalt()));
@@ -236,7 +238,7 @@ public class UserServiceImpl implements UserService {
 
     private UserResponseDTO getUserResponse(UserModel me) {
         if (me == null) {
-            throw new RuntimeException("유저가 존재하지 않습니다.");
+            throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
         UserResponseDTO response = UserMapper.INSTANCE.toUserResponse(me);
         response.setGrade(me.getDepartment() % 10);
