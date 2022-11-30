@@ -10,6 +10,7 @@ import com.bcsdlab.biseo.dto.user.request.UserLoginDTO;
 import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.request.UserSignUpDTO;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
+import com.bcsdlab.biseo.enums.AuthType;
 import com.bcsdlab.biseo.enums.Department;
 import com.bcsdlab.biseo.enums.ErrorMessage;
 import com.bcsdlab.biseo.exception.AuthException;
@@ -129,7 +130,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserAuthDTO sendAuthMail(String accountId) {
+    public UserAuthDTO sendAuthMail(String accountId, AuthType authType) {
         if (accountId == null || accountId.equals("")) {
             throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
         }
@@ -139,7 +140,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 이전 발송 메일이랑 시간 차이 계산
-        UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId());
+        UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId(), authType);
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (recentAuthNum != null
             && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
@@ -154,6 +155,7 @@ public class UserServiceImpl implements UserService {
         UserAuthModel userAuthModel = new UserAuthModel();
         userAuthModel.setUserId(user.getId());
         userAuthModel.setAuthNum(authNum);
+        userAuthModel.setAuthType(authType);
         userRepository.addAuthNum(userAuthModel);
 
         // 메일 발송
@@ -165,9 +167,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void certifySignUpMail(UserAuthDTO userAuthDTO) {
+    public void authorizeSignUpMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            userAuthDTO.getAccountId());
+            userAuthDTO.getAccountId(), AuthType.SIGNUP);
 
         if (recentAuthNum == null) {
             throw new BadRequestException(ErrorMessage.SEND_MAIL_FIRST);
@@ -182,9 +184,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void certifyPasswordMail(UserAuthDTO userAuthDTO) {
+    public void authorizePasswordMail(UserAuthDTO userAuthDTO) {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(
-            userAuthDTO.getAccountId());
+            userAuthDTO.getAccountId(), AuthType.PASSWORD);
 
         if (recentAuthNum == null) {
             throw new BadRequestException(ErrorMessage.SEND_MAIL_FIRST);

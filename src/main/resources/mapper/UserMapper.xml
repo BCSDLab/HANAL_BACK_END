@@ -17,8 +17,8 @@
     </insert>
 
     <insert id="addAuthNum">
-        INSERT INTO User_Auth(user_id, auth_num)
-        VALUES (#{userId},#{authNum})
+        INSERT INTO User_Auth(user_id, auth_num, auth_type)
+        VALUES (#{userId},#{authNum}, #{authType})
     </insert>
 
     <update id="deleteAuthNumById">
@@ -28,7 +28,7 @@
     <select id="findRecentAuthNumByUserAccountId" resultType="UserAuthModel">
         SELECT * FROM User_Auth WHERE user_id = (
             SELECT id FROM User WHERE account_id = #{accountId}
-            ) AND is_deleted = 0
+            ) AND is_deleted = 0 AND auth_type = #{authType}
     </select>
 
     <update id="setUserAuth">

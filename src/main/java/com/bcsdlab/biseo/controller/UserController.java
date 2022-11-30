@@ -9,6 +9,7 @@ import com.bcsdlab.biseo.dto.user.request.UserLoginDTO;
 import com.bcsdlab.biseo.dto.user.request.UserPasswordDTO;
 import com.bcsdlab.biseo.dto.user.request.UserSignUpDTO;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
+import com.bcsdlab.biseo.enums.AuthType;
 import com.bcsdlab.biseo.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -73,23 +74,29 @@ public class UserController {
         return new ResponseEntity<>(userService.refresh(jwtDTO), HttpStatus.OK);
     }
 
-    @PostMapping("/send-mail")
-    @ApiOperation(value = "인증메일 전송", notes = "회원가입 인증, 비밀번호 찾기 인증 메일 전송")
+    @PostMapping("/signup/send-mail")
+    @ApiOperation(value = "회원가입 인증메일 전송", notes = "회원가입 인증 메일 전송")
     public ResponseEntity<UserAuthDTO> sendAuthMail(@RequestParam(value = "accountId") String accountId) {
-        return new ResponseEntity<>(userService.sendAuthMail(accountId), HttpStatus.OK);
+        return new ResponseEntity<>(userService.sendAuthMail(accountId, AuthType.SIGNUP), HttpStatus.OK);
     }
 
-    @PostMapping("/certify-signup")
-    @ApiOperation(value = "회원가입 인증", notes = "회원가입 인증용으로 보낸 코드 인증")
-    public ResponseEntity<Void> certifySignUpMail(@RequestBody UserAuthDTO userAuthDTO) {
-        userService.certifySignUpMail(userAuthDTO);
+    @PostMapping("/password/send-mail")
+    @ApiOperation(value = "비밀번호 찾기 메일 전송", notes = "비밀번호 찾기 인증 메일 전송")
+    public ResponseEntity<UserAuthDTO> sendPasswordMail(@RequestParam(value = "accountId") String accountId) {
+        return new ResponseEntity<>(userService.sendAuthMail(accountId, AuthType.PASSWORD), HttpStatus.OK);
+    }
+
+    @PostMapping("/signup/authorize")
+    @ApiOperation(value = "회원가입 이메일 코드 인증", notes = "회원가입 인증용으로 보낸 코드 인증")
+    public ResponseEntity<Void> authorizeSignUpMail(@RequestBody UserAuthDTO userAuthDTO) {
+        userService.authorizeSignUpMail(userAuthDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PostMapping("/certify-password")
-    @ApiOperation(value = "비밀번호 찾기 인증", notes = "비밀번호 찾기 인증용으로 보낸 코드 인증")
-    public ResponseEntity<Void> certifyPasswordMail(@RequestBody UserAuthDTO userAuthDTO) {
-        userService.certifyPasswordMail(userAuthDTO);
+    @PostMapping("/password/authorize")
+    @ApiOperation(value = "비밀번호 찾기 이메일 코드 인증", notes = "비밀번호 찾기 인증용으로 보낸 코드 인증. 인증 후 비밀번호 해당 메일로 전송")
+    public ResponseEntity<Void> authorizePasswordMail(@RequestBody UserAuthDTO userAuthDTO) {
+        userService.authorizePasswordMail(userAuthDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

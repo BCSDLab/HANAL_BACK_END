@@ -1,0 +1,1 @@
+alter table User_Auth add column auth_type varchar(255) not null;
