@@ -2,6 +2,7 @@ package com.bcsdlab.biseo.repository;
 
 import com.bcsdlab.biseo.dto.user.model.UserAuthModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
+import com.bcsdlab.biseo.enums.AuthType;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -15,7 +16,7 @@ public interface UserRepository {
 
     void addAuthNum(UserAuthModel userAuthModel);
 
-    UserAuthModel findRecentAuthNumByUserAccountId(String accountId);
+    UserAuthModel findRecentAuthNumByUserAccountId(String accountId, AuthType authType);
 
     void deleteAuthNumById(Long id);
 
