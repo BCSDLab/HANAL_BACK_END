@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {
     private static String extRegExp = "^([\\S\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp))$)";
@@ -44,6 +43,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final S3Util s3Util;
 
     @Override
+    @Transactional
     public Long createNotice(NoticeRequestDTO request) {
         // 예외 처리
         if (request.getGrade().size() == 0) {
@@ -67,7 +67,7 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice File 저장
         List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
-        if (fileList.size() != 0) {
+        if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
 
@@ -78,6 +78,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
+    @Transactional
     public NoticeResponseDTO getNotice(Long noticeId) {
         if (noticeId < 1) {
             throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
@@ -130,6 +131,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
+    @Transactional
     public List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead) {
         if (noticeId < 1 || isRead == null) {
             throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
@@ -155,6 +157,7 @@ public class NoticeServiceImpl implements NoticeService {
     // 해당 과/학년 전체 재공지 필요
     // 파일 : 다 지우고 다시 업로드?
     @Override
+    @Transactional
     public Long updateNotice(Long noticeId, NoticeRequestDTO request) {
         // 공지가 존재하지 않는다면
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
@@ -190,7 +193,7 @@ public class NoticeServiceImpl implements NoticeService {
         // notice File 저장
         noticeRepository.deleteNoticeFileByNoticeId(noticeId);
         List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
-        if (fileList.size() != 0) {
+        if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
 
@@ -200,6 +203,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
+    @Transactional
     public String deleteNotice(Long noticeId) {
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
@@ -221,24 +225,28 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
-        List<NoticeFileModel> models = new ArrayList<>();
+        List<NoticeFileModel> fileModels = new ArrayList<>();
+
+        if (files.size() == 0) {
+            return null;
+        }
 
         for (MultipartFile file : files) {
             NoticeFileModel model = new NoticeFileModel();
             UUID uuid = UUID.randomUUID();
-            String savedName = noticeId + "/" + uuid + "/" + file.getOriginalFilename();
+            String savedName = "files/" + noticeId + "/" + uuid + "/" + file.getOriginalFilename();
             model.setNoticeId(noticeId);
-            model.setSavedName(savedName);
-            model.setType(checkFileType(savedName));
+            model.setSavedName(file.getOriginalFilename());
+            model.setType(checkFileType(file.getOriginalFilename()));
             try {
                 model.setPath(s3Util.uploadFile(savedName, file));
             } catch (IOException e) {
                 throw new CriticalException(ErrorMessage.FILE_UPLOAD_FAIL);
             }
-            models.add(model);
+            fileModels.add(model);
         }
 
-        return models;
+        return fileModels;
     }
 
     private FileType checkFileType(String fileName) {
