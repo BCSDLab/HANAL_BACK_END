@@ -6,6 +6,10 @@
         VALUES (#{userId}, #{title}, #{content});
     </insert>
 
+    <update id="updateThumbnail">
+        UPDATE notice SET thumbnail = #{thumbnail} where id = #{id};
+    </update>
+
     <insert id="createTarget" parameterType="NoticeTargetModel">
         INSERT INTO
             Notice_Target(notice_id, target)
@@ -157,7 +161,7 @@
         SELECT
             n.id,
             u.name AS userId,
-            (select path from Notice_File where notice_id = n.id and type = 'IMG' limit 1) as thumbnail,
+            n.thumbnail,
             n.title,
             n.content,
             n.created_at,

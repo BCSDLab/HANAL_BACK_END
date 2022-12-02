@@ -66,13 +66,14 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.createTarget(targetList);
 
         // notice File 저장
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
+        List<NoticeFileModel> fileList = uploadFiles(notice, request.getFiles());
         if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
+        // notice 썸네일 저장
+        noticeRepository.updateThumbnail(notice);
 
         // TODO : notice target에 푸시 알림
-
 
         return notice.getId();
     }
@@ -192,10 +193,12 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice File 저장
         noticeRepository.deleteNoticeFileByNoticeId(noticeId);
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
+        List<NoticeFileModel> fileList = uploadFiles(notice, request.getFiles());
         if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
+        // notice 썸네일 저장
+        noticeRepository.updateThumbnail(notice);
 
         // TODO : notice target에 푸시 알림
 
@@ -224,29 +227,32 @@ public class NoticeServiceImpl implements NoticeService {
         return "게시글 삭제 완료";
     }
 
-    private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
-        List<NoticeFileModel> fileModels = new ArrayList<>();
-
+    private List<NoticeFileModel> uploadFiles(NoticeModel notice, List<MultipartFile> files) {
+        List<NoticeFileModel> noticeFiles = new ArrayList<>();
+        notice.setThumbnail(null);
         if (files.size() == 0) {
             return null;
         }
 
         for (MultipartFile file : files) {
-            NoticeFileModel model = new NoticeFileModel();
+            NoticeFileModel noticeFile = new NoticeFileModel();
             UUID uuid = UUID.randomUUID();
-            String savedName = "files/" + noticeId + "/" + uuid + "/" + file.getOriginalFilename();
-            model.setNoticeId(noticeId);
-            model.setSavedName(file.getOriginalFilename());
-            model.setType(checkFileType(file.getOriginalFilename()));
+            String savedName = "files/" + notice.getId() + "/" + uuid + "/" + file.getOriginalFilename();
+            noticeFile.setNoticeId(notice.getId());
+            noticeFile.setSavedName(file.getOriginalFilename());
+            noticeFile.setType(checkFileType(file.getOriginalFilename()));
             try {
-                model.setPath(s3Util.uploadFile(savedName, file));
+                noticeFile.setPath(s3Util.uploadFile(savedName, file));
             } catch (IOException e) {
                 throw new CriticalException(ErrorMessage.FILE_UPLOAD_FAIL);
             }
-            fileModels.add(model);
-        }
+            noticeFiles.add(noticeFile);
 
-        return fileModels;
+            if (notice.getThumbnail() == null && noticeFile.getType() == FileType.IMG) {
+                notice.setThumbnail(noticeFile.getPath());
+            }
+        }
+        return noticeFiles;
     }
 
     private FileType checkFileType(String fileName) {

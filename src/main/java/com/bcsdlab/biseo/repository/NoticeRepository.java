@@ -31,4 +31,5 @@ public interface NoticeRepository {
     void deleteNoticeById(Long noticeId);
     void createFiles(List<NoticeFileModel> files);
     void deleteNoticeFileByNoticeId(Long noticeId);
+    void updateThumbnail(NoticeModel noticeModel);
 }

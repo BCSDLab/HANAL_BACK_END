@@ -15,6 +15,7 @@ public class NoticeModel {
     private Long userId;
     private String title;
     private String content;
+    private String thumbnail;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Boolean isDeleted;
