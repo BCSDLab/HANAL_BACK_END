@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScrapListResponseDTO {
+public class ScrapListItemDTO {
 
     private Long Id;
     private String userId;
