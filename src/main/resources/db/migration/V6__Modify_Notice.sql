@@ -1,0 +1,1 @@
+alter table Notice add column thumbnail text;

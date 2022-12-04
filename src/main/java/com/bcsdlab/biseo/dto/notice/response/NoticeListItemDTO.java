@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeListResponseDTO {
+public class NoticeListItemDTO {
 
     private Long id;
     private String userId;

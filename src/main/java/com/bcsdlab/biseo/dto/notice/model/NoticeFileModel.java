@@ -1,5 +1,6 @@
 package com.bcsdlab.biseo.dto.notice.model;
 
+import com.bcsdlab.biseo.dto.notice.response.FileInfoDto;
 import com.bcsdlab.biseo.enums.FileType;
 import java.sql.Timestamp;
 import lombok.AllArgsConstructor;

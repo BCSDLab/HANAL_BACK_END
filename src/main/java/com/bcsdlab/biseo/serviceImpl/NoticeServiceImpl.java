@@ -5,7 +5,9 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
-import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.FileInfoDto;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListDto;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListItemDTO;
 import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
@@ -34,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class NoticeServiceImpl implements NoticeService {
     private static String extRegExp = "^([\\S\\s]+(\\.(?i)(jpg|jpeg|png|gif|bmp))$)";
@@ -44,6 +45,7 @@ public class NoticeServiceImpl implements NoticeService {
     private final S3Util s3Util;
 
     @Override
+    @Transactional
     public Long createNotice(NoticeRequestDTO request) {
         // 예외 처리
         if (request.getGrade().size() == 0) {
@@ -66,18 +68,20 @@ public class NoticeServiceImpl implements NoticeService {
         noticeRepository.createTarget(targetList);
 
         // notice File 저장
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
-        if (fileList.size() != 0) {
+        List<NoticeFileModel> fileList = uploadFiles(notice, request.getFiles());
+        if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
+        // notice 썸네일 저장
+        noticeRepository.updateThumbnail(notice);
 
         // TODO : notice target에 푸시 알림
-
 
         return notice.getId();
     }
 
     @Override
+    @Transactional
     public NoticeResponseDTO getNotice(Long noticeId) {
         if (noticeId < 1) {
             throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
@@ -102,9 +106,9 @@ public class NoticeServiceImpl implements NoticeService {
         // File, Img 구분
         for (NoticeFileModel file : noticeAndFile.getFiles()) {
             if (file.getType() == FileType.FILE) {
-                response.getFiles().add(file.getPath());
+                response.getFiles().add(new FileInfoDto(file));
             } else if (file.getType() == FileType.IMG) {
-                response.getImgs().add(file.getPath());
+                response.getImgs().add(new FileInfoDto(file));
             }
         }
 
@@ -122,14 +126,30 @@ public class NoticeServiceImpl implements NoticeService {
 
     // 커서기반 페이지네이션
     @Override
-    public List<NoticeListResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
+    public NoticeListDto getNoticeList(String searchBy, Long cursor, Integer limits) {
+        if (limits <= 0) {
+            throw new BadRequestException(ErrorMessage.LIMITS_NOT_VALID);
+        }
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
 
-        return noticeRepository.getNoticeList(userDepartment, userId, searchBy, cursor, limits);
+        List<NoticeListItemDTO> noticeList = noticeRepository.getNoticeList(userDepartment, userId, searchBy, cursor, limits + 1);
+
+        NoticeListDto noticeListDto = new NoticeListDto();
+        if (noticeList.size() < limits + 1) {
+            noticeListDto.setIsEnd(true);
+        } else {
+            noticeListDto.setIsEnd(false);
+            noticeListDto.setNextCursor(noticeList.get(limits).getId());
+            noticeList.remove(noticeList.size() - 1);
+        }
+        noticeListDto.setNoticeList(noticeList);
+
+        return noticeListDto;
     }
 
     @Override
+    @Transactional
     public List<UserResponseDTO> getReadLog(Long noticeId, Boolean isRead) {
         if (noticeId < 1 || isRead == null) {
             throw new BadRequestException(ErrorMessage.INVALID_NOTICE_ID);
@@ -151,10 +171,8 @@ public class NoticeServiceImpl implements NoticeService {
         return responses;
     }
 
-    // 수정시
-    // 해당 과/학년 전체 재공지 필요
-    // 파일 : 다 지우고 다시 업로드?
     @Override
+    @Transactional
     public Long updateNotice(Long noticeId, NoticeRequestDTO request) {
         // 공지가 존재하지 않는다면
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
@@ -189,10 +207,12 @@ public class NoticeServiceImpl implements NoticeService {
 
         // notice File 저장
         noticeRepository.deleteNoticeFileByNoticeId(noticeId);
-        List<NoticeFileModel> fileList = uploadFiles(notice.getId(), request.getFiles());
-        if (fileList.size() != 0) {
+        List<NoticeFileModel> fileList = uploadFiles(notice, request.getFiles());
+        if (fileList != null) {
             noticeRepository.createFiles(fileList);
         }
+        // notice 썸네일 저장
+        noticeRepository.updateThumbnail(notice);
 
         // TODO : notice target에 푸시 알림
 
@@ -200,6 +220,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
+    @Transactional
     public String deleteNotice(Long noticeId) {
         NoticeModel notice = noticeRepository.findNoticeById(noticeId);
         if (notice == null) {
@@ -220,25 +241,32 @@ public class NoticeServiceImpl implements NoticeService {
         return "게시글 삭제 완료";
     }
 
-    private List<NoticeFileModel> uploadFiles(Long noticeId, List<MultipartFile> files) {
-        List<NoticeFileModel> models = new ArrayList<>();
+    private List<NoticeFileModel> uploadFiles(NoticeModel notice, List<MultipartFile> files) {
+        List<NoticeFileModel> noticeFiles = new ArrayList<>();
+        notice.setThumbnail(null);
+        if (files.size() == 0) {
+            return null;
+        }
 
         for (MultipartFile file : files) {
-            NoticeFileModel model = new NoticeFileModel();
+            NoticeFileModel noticeFile = new NoticeFileModel();
             UUID uuid = UUID.randomUUID();
-            String savedName = noticeId + "/" + uuid + "/" + file.getOriginalFilename();
-            model.setNoticeId(noticeId);
-            model.setSavedName(savedName);
-            model.setType(checkFileType(savedName));
+            String savedName = "files/" + notice.getId() + "/" + uuid + "/" + file.getOriginalFilename();
+            noticeFile.setNoticeId(notice.getId());
+            noticeFile.setSavedName(file.getOriginalFilename());
+            noticeFile.setType(checkFileType(file.getOriginalFilename()));
             try {
-                model.setPath(s3Util.uploadFile(savedName, file));
+                noticeFile.setPath(s3Util.uploadFile(savedName, file));
             } catch (IOException e) {
                 throw new CriticalException(ErrorMessage.FILE_UPLOAD_FAIL);
             }
-            models.add(model);
-        }
+            noticeFiles.add(noticeFile);
 
-        return models;
+            if (notice.getThumbnail() == null && noticeFile.getType() == FileType.IMG) {
+                notice.setThumbnail(noticeFile.getPath());
+            }
+        }
+        return noticeFiles;
     }
 
     private FileType checkFileType(String fileName) {
