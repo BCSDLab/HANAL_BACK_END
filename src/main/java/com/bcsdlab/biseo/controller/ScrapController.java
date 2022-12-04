@@ -1,7 +1,8 @@
 package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
-import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListDto;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListItemDTO;
 import com.bcsdlab.biseo.dto.scrap.response.ScrapResponseDTO;
 import com.bcsdlab.biseo.service.ScrapService;
 import io.swagger.annotations.ApiOperation;
@@ -29,10 +30,10 @@ public class ScrapController {
     @GetMapping
     @Auth
     @ApiOperation(value = "스크랩 목록", notes = "스크랩 목록을 불러옵니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<List<ScrapListResponseDTO>> getScrapList(
+    public ResponseEntity<ScrapListDto> getScrapList(
         @ApiParam(name = "searchBy", value = "제목 검색") @RequestParam(value = "searchBy", required = false) String searchBy,
         @ApiParam(name = "cursor", value = "커서 기반 페이지네이션 사용") @RequestParam(value = "cursor", required = false) Long cursor,
-        @ApiParam(name = "limits", value = "커서 기준으로 limits개 검색") @RequestParam(value = "limits", required = false) Integer limits) {
+        @ApiParam(name = "limits", value = "커서 기준으로 limits개 검색. 필수") @RequestParam(value = "limits") Integer limits) {
         return new ResponseEntity<>(scrapService.getScrapList(searchBy, cursor, limits), HttpStatus.OK);
     }
 

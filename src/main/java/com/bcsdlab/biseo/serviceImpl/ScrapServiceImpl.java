@@ -1,7 +1,9 @@
 package com.bcsdlab.biseo.serviceImpl;
 
+import com.bcsdlab.biseo.dto.notice.response.NoticeListDto;
 import com.bcsdlab.biseo.dto.scrap.ScrapModel;
-import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListDto;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListItemDTO;
 import com.bcsdlab.biseo.dto.scrap.response.ScrapResponseDTO;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
 import com.bcsdlab.biseo.enums.ErrorMessage;
@@ -73,8 +75,23 @@ public class ScrapServiceImpl implements ScrapService {
     }
 
     @Override
-    public List<ScrapListResponseDTO> getScrapList(String searchBy, Long cursor, Integer limits) {
+    public ScrapListDto getScrapList(String searchBy, Long cursor, Integer limits) {
+        if (limits <= 0) {
+            throw new BadRequestException(ErrorMessage.LIMITS_NOT_VALID);
+        }
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
-        return scrapRepository.getScrapList(userId, searchBy, cursor, limits);
+        List<ScrapListItemDTO> scrapList =  scrapRepository.getScrapList(userId, searchBy, cursor, limits + 1);
+
+        ScrapListDto scrapListDto = new ScrapListDto();
+        if (scrapList.size() < limits + 1) {
+            scrapListDto.setIsEnd(true);
+        } else {
+            scrapListDto.setIsEnd(false);
+            scrapListDto.setNextCursor(scrapList.get(limits).getId());
+            scrapList.remove(scrapList.size() - 1);
+        }
+        scrapListDto.setScrapList(scrapList);
+
+        return scrapListDto;
     }
 }

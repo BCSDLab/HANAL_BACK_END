@@ -25,7 +25,7 @@
             id = #{id}
     </update>
 
-    <select id="getScrapList" resultType="ScrapListResponseDTO">
+    <select id="getScrapList" resultType="ScrapListItemDTO">
         SELECT
             s.id,
             u.name as userId,
@@ -41,22 +41,16 @@
         WHERE
             s.user_id = #{userId}
         <if test="cursor neq null">
-            AND s.id <![CDATA[<]]> #{cursor}
+            AND s.id <![CDATA[<=]]> #{cursor}
         </if>
         <if test="searchBy neq null and searchBy neq ''.toString()">
             AND n.title LIKE CONCAT('%',#{searchBy},'%')
         </if>
-        AND s.is_deleted = 0
+        AND
+            s.is_deleted = 0
         ORDER BY
-        s.id desc
+            s.id desc
         LIMIT
-        <choose>
-            <when test="limits == null || limits lte 0">
-                5;
-            </when>
-            <otherwise>
-                #{limits};
-            </otherwise>
-        </choose>
+            #{limits};
     </select>
 </mapper>

@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.repository;
 
 import com.bcsdlab.biseo.dto.scrap.ScrapModel;
-import com.bcsdlab.biseo.dto.scrap.response.ScrapListResponseDTO;
+import com.bcsdlab.biseo.dto.scrap.response.ScrapListItemDTO;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,5 +13,5 @@ public interface ScrapRepository {
     ScrapModel findScrapByUserIdAndNoticeId(Long userId, Long noticeId);
     ScrapModel findScrapById(Long scrapId);
     void deleteScrapById(Long id);
-    List<ScrapListResponseDTO> getScrapList(Long userId, String searchBy, Long cursor, Integer limits);
+    List<ScrapListItemDTO> getScrapList(Long userId, String searchBy, Long cursor, Integer limits);
 }
