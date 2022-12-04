@@ -1,6 +1,5 @@
 package com.bcsdlab.biseo.dto.notice.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,14 +21,14 @@ public class NoticeResponseDTO {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Long scrapId;
-    private List<String> files = new ArrayList<>();
-    private List<String> imgs = new ArrayList<>();
+    private List<FileInfoDto> files = new ArrayList<>();
+    private List<FileInfoDto> imgs = new ArrayList<>();
 
-    public void addFile(String file) {
+    public void addFile(FileInfoDto file) {
         files.add(file);
     }
 
-    public void addImgs(String img) {
+    public void addImgs(FileInfoDto img) {
         imgs.add(img);
     }
 }

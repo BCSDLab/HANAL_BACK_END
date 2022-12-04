@@ -22,6 +22,7 @@
     <resultMap id="noticeFileMap" type="NoticeFileModel">
         <result property="path" column="path"/>
         <result property="type" column="type"/>
+        <result property="savedName" column="saved_name"/>
     </resultMap>
 
     <resultMap id="noticeAndFileMap" type="NoticeAndFileModel">
@@ -44,6 +45,7 @@
             n.created_at,
             n.updated_at,
             f.path,
+            f.saved_name,
             f.type,
             s.id as scrapId
         FROM

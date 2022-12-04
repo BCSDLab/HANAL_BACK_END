@@ -5,6 +5,7 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeFileModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
+import com.bcsdlab.biseo.dto.notice.response.FileInfoDto;
 import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
 import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
@@ -104,9 +105,9 @@ public class NoticeServiceImpl implements NoticeService {
         // File, Img 구분
         for (NoticeFileModel file : noticeAndFile.getFiles()) {
             if (file.getType() == FileType.FILE) {
-                response.getFiles().add(file.getPath());
+                response.getFiles().add(new FileInfoDto(file));
             } else if (file.getType() == FileType.IMG) {
-                response.getImgs().add(file.getPath());
+                response.getImgs().add(new FileInfoDto(file));
             }
         }
 
@@ -154,9 +155,6 @@ public class NoticeServiceImpl implements NoticeService {
         return responses;
     }
 
-    // 수정시
-    // 해당 과/학년 전체 재공지 필요
-    // 파일 : 다 지우고 다시 업로드?
     @Override
     @Transactional
     public Long updateNotice(Long noticeId, NoticeRequestDTO request) {
