@@ -159,7 +159,7 @@
             notice_id = #{noticeId}
     </update>
 
-    <select id="getNoticeList" resultType="NoticeListResponseDTO">
+    <select id="getNoticeList" resultType="NoticeListItemDTO">
         SELECT
             n.id,
             u.name AS userId,
@@ -177,7 +177,7 @@
         WHERE
             nt.target = #{department} AND nt.is_deleted = 0
           <if test="cursor neq null">
-              AND n.id <![CDATA[<]]> #{cursor}
+              AND n.id <![CDATA[<=]]> #{cursor}
           </if>
           <if test="searchBy neq null and searchBy neq ''.toString()">
               AND n.title LIKE CONCAT('%',#{searchBy},'%')
@@ -186,13 +186,6 @@
         ORDER BY
             n.id desc
         LIMIT
-            <choose>
-                <when test="limits == null || limits lte 0">
-                    5;
-                </when>
-                <otherwise>
-                    #{limits};
-                </otherwise>
-            </choose>
+            #{limits};
     </select>
 </mapper>

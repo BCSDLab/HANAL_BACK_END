@@ -2,7 +2,7 @@ package com.bcsdlab.biseo.controller;
 
 import com.bcsdlab.biseo.annotation.Auth;
 import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
-import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListDto;
 import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.user.response.UserResponseDTO;
 import com.bcsdlab.biseo.enums.UserType;
@@ -41,10 +41,10 @@ public class NoticeController {
     @GetMapping
     @Auth
     @ApiOperation(value = "공지 목록 조회", notes = "공지 목록을 조회합니다.", authorizations = {@Authorization(value = "Authorization")})
-    public ResponseEntity<List<NoticeListResponseDTO>> getNoticeList(
+    public ResponseEntity<NoticeListDto> getNoticeList(
         @ApiParam(name = "searchBy", value = "제목 검색") @RequestParam(value = "searchBy", required = false) String searchBy,
-        @ApiParam(name = "cursor", value = "커서 기반 페이지네이션 사용") @RequestParam(value = "cursor", required = false) Long cursor,
-        @ApiParam(name = "limits", value = "커서 기준으로 limits개 검색") @RequestParam(value = "limits", required = false) Integer limits) {
+        @ApiParam(name = "cursor", value = "커서 기반 페이지네이션 사용. 없으면 최근 글부터 조회") @RequestParam(value = "cursor", required = false) Long cursor,
+        @ApiParam(name = "limits", value = "커서 기준으로 limits개 검색. 필수 입력") @RequestParam(value = "limits") Integer limits) {
         return new ResponseEntity<>(noticeService.getNoticeList(searchBy, cursor, limits),
             HttpStatus.OK);
     }

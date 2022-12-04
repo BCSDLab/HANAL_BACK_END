@@ -6,7 +6,8 @@ import com.bcsdlab.biseo.dto.notice.model.NoticeModel;
 import com.bcsdlab.biseo.dto.notice.model.NoticeReadModel;
 import com.bcsdlab.biseo.dto.notice.request.NoticeRequestDTO;
 import com.bcsdlab.biseo.dto.notice.response.FileInfoDto;
-import com.bcsdlab.biseo.dto.notice.response.NoticeListResponseDTO;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListDto;
+import com.bcsdlab.biseo.dto.notice.response.NoticeListItemDTO;
 import com.bcsdlab.biseo.dto.notice.response.NoticeResponseDTO;
 import com.bcsdlab.biseo.dto.notice.model.NoticeTargetModel;
 import com.bcsdlab.biseo.dto.user.model.UserModel;
@@ -125,11 +126,26 @@ public class NoticeServiceImpl implements NoticeService {
 
     // 커서기반 페이지네이션
     @Override
-    public List<NoticeListResponseDTO> getNoticeList(String searchBy, Long cursor, Integer limits) {
+    public NoticeListDto getNoticeList(String searchBy, Long cursor, Integer limits) {
+        if (limits <= 0) {
+            throw new BadRequestException(ErrorMessage.LIMITS_NOT_VALID);
+        }
         Long userId = Long.parseLong(jwtUtil.findUserInfoInToken().getAudience().get(0));
         Integer userDepartment = userRepository.findUserDepartmentById(userId);
 
-        return noticeRepository.getNoticeList(userDepartment, userId, searchBy, cursor, limits);
+        List<NoticeListItemDTO> noticeList = noticeRepository.getNoticeList(userDepartment, userId, searchBy, cursor, limits + 1);
+
+        NoticeListDto noticeListDto = new NoticeListDto();
+        if (noticeList.size() < limits + 1) {
+            noticeListDto.setIsEnd(true);
+        } else {
+            noticeListDto.setIsEnd(false);
+            noticeListDto.setNextCursor(noticeList.get(limits).getId());
+            noticeList.remove(noticeList.size() - 1);
+        }
+        noticeListDto.setNoticeList(noticeList);
+
+        return noticeListDto;
     }
 
     @Override

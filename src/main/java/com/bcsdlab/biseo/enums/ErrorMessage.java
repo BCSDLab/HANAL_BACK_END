@@ -26,6 +26,7 @@ public enum ErrorMessage {
     SCRAP_DELETE_DENIED("스크랩 삭제 권한이 없습니다.", HttpStatus.UNAUTHORIZED),
     SCRAP_EXIST("스크랩이 이미 존재합니다.", HttpStatus.BAD_REQUEST),
     SCRAP_NOT_EXIST("스크랩이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    LIMITS_NOT_VALID("리미트 값은 0보다 커야 합니다.", HttpStatus.BAD_REQUEST),
     ;
 
 
