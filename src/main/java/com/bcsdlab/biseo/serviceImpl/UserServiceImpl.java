@@ -104,8 +104,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public JwtDTO refresh() {
-        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(
-            RequestContextHolder.getRequestAttributes())).getRequest();
+        HttpServletRequest request = ((ServletRequestAttributes) Objects
+            .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
 
         String refreshToken = this.checkRefreshToken(request.getHeader("Authorization"));
 

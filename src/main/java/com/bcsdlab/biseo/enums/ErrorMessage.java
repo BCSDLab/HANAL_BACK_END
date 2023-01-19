@@ -16,7 +16,7 @@ public enum ErrorMessage {
     CHANGE_PASSWORD_FAIL("기존 비밀번호가 다릅니다.",HttpStatus.BAD_REQUEST),
     ACCESS_TOKEN_INVALID("올바르지 않은 토큰입니다.", HttpStatus.BAD_REQUEST),
     ACCESS_TOKEN_EXPIRED("토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
-    REFRESH_TOKEN_INVALID("올바르지 않은 토큰입니다.", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_INVALID("리프레시 토큰이 올바르지 않은 토큰입니다.", HttpStatus.BAD_REQUEST),
     REFRESH_TOKEN_EXPIRED("리프레시 토큰이 유효하지 않습니다. 다시 로그인하세요.", HttpStatus.UNAUTHORIZED),
     NO_AUTHORIZATION("해당 서비스에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
     GRADE_REQUIRED("학년을 선택해야 합니다.", HttpStatus.BAD_REQUEST),
