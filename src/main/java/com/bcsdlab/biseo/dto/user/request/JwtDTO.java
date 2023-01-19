@@ -1,7 +1,6 @@
 package com.bcsdlab.biseo.dto.user.request;
 
-import io.swagger.annotations.ApiModelProperty;
-import javax.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,12 +10,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class JwtDTO {
-    @NotBlank(message = "access 토큰이 비어있으면 안됩니다.")
-    @ApiModelProperty(value = "access 토큰")
-    String access;
+    String accessToken;
+    String refreshToken;
 
-    @NotBlank(message = "refresh 토큰이 비어있으면 안됩니다.")
-    @ApiModelProperty(value = "refresh 토큰")
-    String refresh;
+    public JwtDTO(String accessToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = null;
+    }
 }

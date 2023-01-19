@@ -14,7 +14,7 @@ public interface UserService {
     UserResponseDTO signUp(UserSignUpDTO request);
     JwtDTO login(UserLoginDTO request);
     String logout();
-    JwtDTO refresh(JwtDTO jwtDTO);
+    JwtDTO refresh();
     UserAuthDTO sendAuthMail(String accountId, AuthType authType);
     void authorizeSignUpMail(UserAuthDTO userAuthDTO);
     void authorizePasswordMail(UserAuthDTO userAuthDTO);

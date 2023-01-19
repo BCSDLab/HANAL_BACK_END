@@ -23,14 +23,18 @@ import com.bcsdlab.biseo.util.MailUtil;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Service
 @Transactional
@@ -86,9 +90,7 @@ public class UserServiceImpl implements UserService {
             return newToken;
         });
 
-        response.setAccess(accessToken);
-        response.setRefresh(refreshToken);
-        return response;
+        return new JwtDTO(accessToken, refreshToken);
     }
 
     @Override
@@ -101,16 +103,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public JwtDTO refresh(JwtDTO jwtDTO) {
-        if (!jwtUtil.isValid(jwtDTO.getRefresh(), "refresh")) {
-            throw new AuthException(ErrorMessage.REFRESH_TOKEN_EXPIRED);
-        }
-        DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(jwtDTO.getRefresh());
+    public JwtDTO refresh() {
+        HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(
+            RequestContextHolder.getRequestAttributes())).getRequest();
+
+        String refreshToken = this.checkRefreshToken(request.getHeader("Authorization"));
+
+        DecodedJWT decodedRefreshJWT = jwtUtil.getDecodedJWT(refreshToken);
 
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
         String key = String.format("user:%s:refresh", decodedRefreshJWT.getAudience().get(0));
-        String refreshToken = Optional.ofNullable(operations.get(key))
-            .filter(t -> t.equals(jwtDTO.getRefresh()))
+        String storedRefreshToken = Optional.ofNullable(operations.get(key))
+            .filter(t -> t.equals(refreshToken))
             .orElseThrow(() -> new AuthException(ErrorMessage.REFRESH_TOKEN_EXPIRED));
 
         // 문제가 없으면 토큰 정보로 회원 조회 후 다시 토큰 생성
@@ -118,15 +122,7 @@ public class UserServiceImpl implements UserService {
         UserModel user = userRepository.findById(userId);
         String accessToken = jwtUtil.getAccessToken(user);
 
-        // 3일 뒤 만료라면
-        if (LocalDateTime.now().plusDays(3).isAfter(
-            decodedRefreshJWT.getExpiresAt().toInstant().atZone(ZoneId.systemDefault())
-                .toLocalDateTime())) {
-            refreshToken = jwtUtil.getRefreshToken(user);
-            operations.set(key, refreshToken);
-        }
-
-        return new JwtDTO(accessToken, refreshToken);
+        return new JwtDTO(accessToken);
     }
 
     @Override
@@ -275,5 +271,17 @@ public class UserServiceImpl implements UserService {
         }
 
         return sb.toString();
+    }
+
+    private String checkRefreshToken(String bearerToken) {
+        if (!jwtUtil.isValidForm(bearerToken)) {
+            throw new AuthException(ErrorMessage.REFRESH_TOKEN_INVALID);
+        }
+        String token = bearerToken.substring(7);
+        if (!jwtUtil.isValid(token, "refresh")) {
+            throw new AuthException(ErrorMessage.REFRESH_TOKEN_EXPIRED);
+        }
+
+        return token;
     }
 }
