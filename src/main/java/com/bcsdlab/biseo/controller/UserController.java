@@ -69,9 +69,11 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    @ApiOperation(value = "access 토큰 재발급", notes = "access 토큰과 refresh 토큰을 사용하여 만료된 access 토큰을 재발급 받는다.")
-    public ResponseEntity<JwtDTO> refresh(@RequestBody JwtDTO jwtDTO) {
-        return new ResponseEntity<>(userService.refresh(jwtDTO), HttpStatus.OK);
+    @ApiOperation(value = "access 토큰 재발급",
+        notes = "refresh 토큰을 사용하여 만료된 access 토큰을 재발급 받는다.\n\n"
+            + "헤더 : Authorization => Bearer RefreshToken")
+    public ResponseEntity<JwtDTO> refresh() {
+        return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 
     @PostMapping("/signup/send-mail")
