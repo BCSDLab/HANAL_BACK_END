@@ -85,7 +85,7 @@
         FROM
             User
         WHERE
-            department NOT IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0)
+            department IN (SELECT target FROM Notice_Target WHERE notice_id = #{noticeId} AND is_deleted = 0)
                 AND
             id NOT IN (SELECT user_id FROM Notice_Read WHERE notice_id = #{noticeId} AND is_deleted = 0);
     </select>
