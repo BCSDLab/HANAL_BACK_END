@@ -7,7 +7,7 @@
     </insert>
 
     <update id="updateThumbnail">
-        UPDATE notice SET thumbnail = #{thumbnail} where id = #{id};
+        UPDATE Notice SET thumbnail = #{thumbnail} where id = #{id};
     </update>
 
     <insert id="createTarget" parameterType="NoticeTargetModel">
