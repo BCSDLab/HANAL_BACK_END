@@ -1,6 +1,6 @@
 package com.bcsdlab.biseo.dto.scrap.response;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,5 +18,5 @@ public class ScrapListItemDTO {
     private String title;
     private String content;
     private String thumbnail;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 }

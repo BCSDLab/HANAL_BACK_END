@@ -1,8 +1,7 @@
 package com.bcsdlab.biseo.dto.notice.model;
 
-import com.bcsdlab.biseo.dto.notice.response.FileInfoDto;
 import com.bcsdlab.biseo.enums.FileType;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,7 @@ public class NoticeFileModel {
     private String path;
     private String savedName;
     private FileType type;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Boolean isDeleted;
 }

@@ -1,6 +1,6 @@
 package com.bcsdlab.biseo.dto.notice.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,8 +14,8 @@ public class NoticeTargetModel {
     private Long id;
     private Long noticeId;
     private int target;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Boolean isDeleted;
 
     public NoticeTargetModel(Long noticeId, int target) {

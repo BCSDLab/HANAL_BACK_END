@@ -139,7 +139,7 @@ public class UserServiceImpl implements UserService {
         UserAuthModel recentAuthNum = userRepository.findRecentAuthNumByUserAccountId(user.getAccountId(), authType);
         Timestamp now = new Timestamp(System.currentTimeMillis());
         if (recentAuthNum != null
-            && now.getTime() - recentAuthNum.getCreatedAt().getTime() < 5 * 60 * 1000) {
+            && now.getTime() - Timestamp.valueOf(recentAuthNum.getCreatedAt()).getTime() < 5 * 60 * 1000) {
             throw new BadRequestException(ErrorMessage.SEND_MAIL_FAIL);
         }
         if (recentAuthNum != null) {

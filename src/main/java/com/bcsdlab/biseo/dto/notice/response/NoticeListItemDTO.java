@@ -1,6 +1,6 @@
 package com.bcsdlab.biseo.dto.notice.response;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ public class NoticeListItemDTO {
     private String title;
     private String content;
     private String thumbnail;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Long scrapId;
 }

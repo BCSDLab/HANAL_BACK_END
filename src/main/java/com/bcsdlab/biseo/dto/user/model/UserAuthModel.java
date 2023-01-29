@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.dto.user.model;
 
 import com.bcsdlab.biseo.enums.AuthType;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +15,7 @@ public class UserAuthModel {
     private Long id;
     private Long userId;
     private String authNum;
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
     private AuthType authType;
     private boolean isDeleted;
 }

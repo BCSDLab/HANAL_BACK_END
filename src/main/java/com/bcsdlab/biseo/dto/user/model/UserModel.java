@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.dto.user.model;
 
 import com.bcsdlab.biseo.enums.UserType;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,8 +20,8 @@ public class UserModel {
     private String studentId;
     private Integer department;
     private UserType userType;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Boolean isAuth;
     private Boolean isDeleted;
 }

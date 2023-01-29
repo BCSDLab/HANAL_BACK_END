@@ -1,7 +1,7 @@
 package com.bcsdlab.biseo.dto.notice.model;
 
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -18,8 +18,8 @@ public class NoticeAndFileModel {
     private String userId;
     private String title;
     private String content;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Long scrapId;
     private List<NoticeFileModel> files = new ArrayList<>();
 }

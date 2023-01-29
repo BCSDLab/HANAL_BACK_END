@@ -1,6 +1,6 @@
 package com.bcsdlab.biseo.dto.notice.model;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +17,6 @@ public class NoticeReadModel {
     private Long id;
     private Long noticeId;
     private Long userId;
-    private Timestamp readAt;
+    private LocalDateTime readAt;
     private Boolean isDeleted;
 }
