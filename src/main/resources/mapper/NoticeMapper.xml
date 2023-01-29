@@ -50,11 +50,11 @@
             s.id as scrapId
         FROM
             Notice n
-        LEFT JOIN Notice_File f ON n.id = f.notice_id
+        LEFT JOIN Notice_File f ON n.id = f.notice_id AND f.is_deleted = 0
         LEFT JOIN User u ON n.user_id = u.id
         LEFT JOIN Scrap s ON s.user_id = #{userId} and s.notice_id = n.id and s.is_deleted = 0
         WHERE
-            n.id = #{noticeId} AND n.is_deleted = 0 AND f.is_deleted = 0;
+            n.id = #{noticeId} AND n.is_deleted = 0;
     </select>
     
     <select id="findReadLogByUserId" resultType="NoticeReadModel">
